@@ -116,10 +116,16 @@ export default function Home() {
           {hasCompanion ? (
             <>
               <Link
-                href="/quest"
+                href="/bookshelf"
                 className="rounded-full bg-[var(--accent-dark)] px-5 py-4 text-center font-medium text-white shadow-sm transition-all duration-200 hover:brightness-110"
               >
-                {isQuestCompleted ? "View Quest Reflection" : "Continue to First Quest"}
+                📖 Enter Living Library
+              </Link>
+              <Link
+                href="/quest"
+                className="rounded-full border border-black/10 bg-white px-5 py-4 text-center font-medium text-black/75 transition-all duration-200 hover:bg-black/5"
+              >
+                {isQuestCompleted ? "View Quest Reflection" : "First Quest"}
               </Link>
               <button
                 onClick={resetCompanion}

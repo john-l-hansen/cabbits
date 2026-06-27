@@ -48,3 +48,33 @@ CREATE POLICY "Allow public insert access to memories" ON public.companion_memor
 
 CREATE POLICY "Allow public delete access to memories" ON public.companion_memories
     FOR DELETE USING (true);
+
+-- Create companion_books table
+CREATE TABLE IF NOT EXISTS public.companion_books (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    companion_id UUID NOT NULL REFERENCES public.companions(id) ON DELETE CASCADE,
+    book_id TEXT NOT NULL,
+    progress INTEGER DEFAULT 0 NOT NULL,
+    is_favorite BOOLEAN DEFAULT false NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE(companion_id, book_id)
+);
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_books_companion_id ON public.companion_books(companion_id);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE public.companion_books ENABLE ROW LEVEL SECURITY;
+
+-- Policies for companion_books
+CREATE POLICY "Allow public read access to companion_books" ON public.companion_books
+    FOR SELECT USING (true);
+
+CREATE POLICY "Allow public insert access to companion_books" ON public.companion_books
+    FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow public update access to companion_books" ON public.companion_books
+    FOR UPDATE USING (true);
+
+CREATE POLICY "Allow public delete access to companion_books" ON public.companion_books
+    FOR DELETE USING (true);

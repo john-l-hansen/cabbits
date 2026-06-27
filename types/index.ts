@@ -16,3 +16,21 @@ export type CompanionMemory = {
   questId: string;
   createdAt: string;
 };
+
+export type BookCategory = "stories" | "logic" | "math" | "language" | "science" | "creativity";
+
+export type Book = {
+  id: string;
+  title: string;
+  category: BookCategory;
+  coverGradient: string;
+  coverEmoji: string;
+  ageRange: string;
+  readingTime: string;
+  skills: string[];
+  description: string;
+  isNew?: boolean;
+  isLocked?: boolean;
+  progress: number;
+  isFavorite: boolean;
+};

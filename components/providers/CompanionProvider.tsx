@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Companion, CompanionTemperament, CompanionMemory } from "@/types";
+import { Companion, CompanionTemperament, CompanionMemory, Book } from "@/types";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { runAgentSimulation } from "@/lib/agents/simulation";
 
@@ -11,9 +11,12 @@ type CompanionContextType = {
   isLoading: boolean;
   isUsingSupabase: boolean;
   memories: CompanionMemory[];
+  books: Book[];
   createCompanion: (name: string, temperament: CompanionTemperament) => Promise<void>;
   completeQuest: (userObservation: string) => Promise<void>;
   resetCompanion: () => Promise<void>;
+  toggleFavoriteBook: (bookId: string) => Promise<void>;
+  updateBookProgress: (bookId: string, progress: number) => Promise<void>;
 };
 
 const CompanionContext = createContext<CompanionContextType | undefined>(undefined);
@@ -21,6 +24,7 @@ const CompanionContext = createContext<CompanionContextType | undefined>(undefin
 const COMPANION_STORAGE_KEY = "cabbits_companion_v1";
 const QUEST_STORAGE_KEY = "cabbits_quest_completed_v1";
 const MEMORIES_STORAGE_KEY = "cabbits_memories_v1";
+const BOOKS_STATE_STORAGE_KEY = "cabbits_books_state_v1";
 
 // Safe cross-platform UUID generator for PostgreSQL UUID fields
 const generateUUID = () => {
@@ -34,10 +38,83 @@ const generateUUID = () => {
   });
 };
 
+const DEFAULT_BOOKS: Omit<Book, "progress" | "isFavorite">[] = [
+  {
+    id: "missing_acorns",
+    title: "The Missing Acorns",
+    category: "stories",
+    coverGradient: "from-[#a0522d] to-[#cd853f]",
+    coverEmoji: "🐿️",
+    ageRange: "4-7",
+    readingTime: "5m",
+    skills: ["Reading", "Vocabulary", "Forest Animals"],
+    description: "Moss is missing his winter acorns! Help Pip explore the oak trees and locate the hidden stash.",
+    isNew: true,
+  },
+  {
+    id: "curious_numbers",
+    title: "The Curious Numbers",
+    category: "math",
+    coverGradient: "from-[#4682b4] to-[#1e90ff]",
+    coverEmoji: "🧮",
+    ageRange: "5-8",
+    readingTime: "7m",
+    skills: ["Counting", "Simple Addition", "Patterns"],
+    description: "Discover the magic numbers of rabbit valley. Count carrots and learn basic arithmetic scales.",
+  },
+  {
+    id: "bunny_bridge",
+    title: "Build the Bunny Bridge",
+    category: "logic",
+    coverGradient: "from-[#556b2f] to-[#8fbc8f]",
+    coverEmoji: "🌉",
+    ageRange: "6-9",
+    readingTime: "8m",
+    skills: ["Logic Paths", "Sequencing", "Engineering"],
+    description: "The spring stream has flooded! Help construct a safe bridge using logs and stones in correct order.",
+  },
+  {
+    id: "treasure_map",
+    title: "The Pirate Treasure Map",
+    category: "stories",
+    coverGradient: "from-[#d2691e] to-[#ff8c00]",
+    coverEmoji: "🗺️",
+    ageRange: "6-10",
+    readingTime: "10m",
+    skills: ["Problem Solving", "Navigation", "Coordinates"],
+    description: "Chart a course based on Captain Rabbiton's ancient clues and recover the sand beach chest.",
+  },
+  {
+    id: "moonlight_observatory",
+    title: "Moonlight Observatory",
+    category: "science",
+    coverGradient: "from-[#483d8b] to-[#191970]",
+    coverEmoji: "🔭",
+    ageRange: "7-12",
+    readingTime: "6m",
+    skills: ["Astronomy", "Nature Observation", "Space Patterns"],
+    description: "Study constellations and learn moon phases through the lens of a giant telescope.",
+    isLocked: true,
+  },
+  {
+    id: "potion_workshop",
+    title: "Potion Workshop",
+    category: "creativity",
+    coverGradient: "from-[#9932cc] to-[#8b008b]",
+    coverEmoji: "🧪",
+    ageRange: "5-10",
+    readingTime: "8m",
+    skills: ["Math Recipes", "Measurement", "Color Mixing"],
+    description: "Stir, bubble, and mix liquid formulas to unlock colorful magical effects.",
+    isLocked: true,
+  },
+];
+
 export function CompanionProvider({ children }: { children: React.ReactNode }) {
   const [companion, setCompanion] = useState<Companion | null>(null);
   const [isQuestCompleted, setIsQuestCompleted] = useState<boolean>(false);
   const [memories, setMemories] = useState<CompanionMemory[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Initialize and load state
@@ -88,11 +165,36 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
                 const hasFirstQuestMemory = mappedMemories.some((m) => m.questId === "notice_one_thing");
                 setIsQuestCompleted(hasFirstQuestMemory);
               }
+
+              // Fetch book progress states from Supabase
+              const { data: dbBooks, error: booksError } = await supabase
+                .from("companion_books")
+                .select("*")
+                .eq("companion_id", dbComp.id);
+
+              const dbBookMap = new Map<string, { progress: number; is_favorite: boolean }>();
+              if (dbBooks && !booksError) {
+                dbBooks.forEach((b) => {
+                  dbBookMap.set(b.book_id, { progress: b.progress, is_favorite: b.is_favorite });
+                });
+              }
+
+              // Merge defaults with DB states
+              const hydratedBooks = DEFAULT_BOOKS.map((b) => {
+                const dbState = dbBookMap.get(b.id);
+                return {
+                  ...b,
+                  progress: dbState?.progress ?? 0,
+                  isFavorite: dbState?.is_favorite ?? false,
+                } as Book;
+              });
+              setBooks(hydratedBooks);
             } else {
               // Companion not found in DB (e.g. database cleared), clean up local storage references
               localStorage.removeItem(COMPANION_STORAGE_KEY);
               localStorage.removeItem(QUEST_STORAGE_KEY);
               localStorage.removeItem(MEMORIES_STORAGE_KEY);
+              localStorage.removeItem(BOOKS_STATE_STORAGE_KEY);
             }
           }
         } else {
@@ -100,6 +202,7 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
           const savedCompanion = localStorage.getItem(COMPANION_STORAGE_KEY);
           const savedQuest = localStorage.getItem(QUEST_STORAGE_KEY);
           const savedMemories = localStorage.getItem(MEMORIES_STORAGE_KEY);
+          const savedBooksState = localStorage.getItem(BOOKS_STATE_STORAGE_KEY);
 
           if (savedCompanion) {
             setCompanion(JSON.parse(savedCompanion));
@@ -110,6 +213,29 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
           if (savedMemories) {
             setMemories(JSON.parse(savedMemories));
           }
+
+          // Hydrate local books cache
+          const localBookMap = new Map<string, { progress: number; isFavorite: boolean }>();
+          if (savedBooksState) {
+            try {
+              const parsedStates = JSON.parse(savedBooksState) as { id: string; progress: number; isFavorite: boolean }[];
+              parsedStates.forEach((b) => {
+                localBookMap.set(b.id, { progress: b.progress, isFavorite: b.isFavorite });
+              });
+            } catch (e) {
+              console.error("Failed to parse local books state:", e);
+            }
+          }
+
+          const hydratedBooks = DEFAULT_BOOKS.map((b) => {
+            const localState = localBookMap.get(b.id);
+            return {
+              ...b,
+              progress: localState?.progress ?? 0,
+              isFavorite: localState?.isFavorite ?? false,
+            } as Book;
+          });
+          setBooks(hydratedBooks);
         }
       } catch (error) {
         console.error("Failed to load Cabbits state:", error);
@@ -136,12 +262,17 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
     setCompanion(newCompanion);
     setIsQuestCompleted(false);
     setMemories([]);
+    
+    // Reset books collection
+    const freshBooks = DEFAULT_BOOKS.map((b) => ({ ...b, progress: 0, isFavorite: false } as Book));
+    setBooks(freshBooks);
 
     // Local Storage Cache
     try {
       localStorage.setItem(COMPANION_STORAGE_KEY, JSON.stringify(newCompanion));
       localStorage.setItem(QUEST_STORAGE_KEY, JSON.stringify(false));
       localStorage.setItem(MEMORIES_STORAGE_KEY, JSON.stringify([]));
+      localStorage.setItem(BOOKS_STATE_STORAGE_KEY, JSON.stringify([]));
     } catch (error) {
       console.error("Local save failed:", error);
     }
@@ -171,6 +302,8 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
 
   const completeQuest = async (userObservation: string) => {
     if (!companion) return;
+
+    setIsQuestCompleted(true);
 
     // Run the agent simulation pipeline
     const payload = runAgentSimulation(
@@ -266,16 +399,131 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const toggleFavoriteBook = async (bookId: string) => {
+    if (!companion) return;
+
+    let newFavoriteStatus = false;
+    const updatedBooks = books.map((b) => {
+      if (b.id === bookId) {
+        newFavoriteStatus = !b.isFavorite;
+        return { ...b, isFavorite: newFavoriteStatus };
+      }
+      return b;
+    });
+
+    setBooks(updatedBooks);
+
+    // Local Storage Cache
+    try {
+      const serializable = updatedBooks.map((b) => ({ id: b.id, progress: b.progress, isFavorite: b.isFavorite }));
+      localStorage.setItem(BOOKS_STATE_STORAGE_KEY, JSON.stringify(serializable));
+    } catch (e) {
+      console.error("Local save failed for favorite:", e);
+    }
+
+    // Persist to Supabase if configured
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from("companion_books").upsert(
+          {
+            companion_id: companion.id,
+            book_id: bookId,
+            is_favorite: newFavoriteStatus,
+          },
+          { onConflict: "companion_id,book_id" }
+        );
+        console.log("Cabbits: Upserted book favorite in Supabase.");
+      } catch (e) {
+        console.error("Database upsert failed for book favorite:", e);
+      }
+    }
+  };
+
+  const updateBookProgress = async (bookId: string, newProgress: number) => {
+    if (!companion) return;
+
+    const targetBook = books.find((b) => b.id === bookId);
+    const prevProgress = targetBook?.progress ?? 0;
+    if (prevProgress === newProgress) return;
+
+    // Fill curiosity when finishing a chapter / advancing progress!
+    let curiosityReward = 0;
+    if (newProgress > prevProgress) {
+      // Award 20 curiosity points for finishing progress intervals
+      curiosityReward = 20;
+    }
+
+    let newCuriosity = companion.curiosity + curiosityReward;
+    let newInsightsCount = companion.insightsCount;
+
+    if (newCuriosity >= 100) {
+      newCuriosity = 0;
+      newInsightsCount += 1;
+    }
+
+    const updatedCompanion: Companion = {
+      ...companion,
+      curiosity: newCuriosity,
+      insightsCount: newInsightsCount,
+    };
+
+    const updatedBooks = books.map((b) => {
+      if (b.id === bookId) {
+        return { ...b, progress: newProgress };
+      }
+      return b;
+    });
+
+    setCompanion(updatedCompanion);
+    setBooks(updatedBooks);
+
+    // Local Storage Cache
+    try {
+      localStorage.setItem(COMPANION_STORAGE_KEY, JSON.stringify(updatedCompanion));
+      const serializable = updatedBooks.map((b) => ({ id: b.id, progress: b.progress, isFavorite: b.isFavorite }));
+      localStorage.setItem(BOOKS_STATE_STORAGE_KEY, JSON.stringify(serializable));
+    } catch (e) {
+      console.error("Local save failed for progress:", e);
+    }
+
+    // Persist to Supabase if configured
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase
+          .from("companions")
+          .update({
+            curiosity: newCuriosity,
+            insights_count: newInsightsCount,
+          })
+          .eq("id", companion.id);
+
+        await supabase.from("companion_books").upsert(
+          {
+            companion_id: companion.id,
+            book_id: bookId,
+            progress: newProgress,
+          },
+          { onConflict: "companion_id,book_id" }
+        );
+        console.log("Cabbits: Upserted book progress in Supabase.");
+      } catch (e) {
+        console.error("Database upsert failed for book progress:", e);
+      }
+    }
+  };
+
   const resetCompanion = async () => {
     const prevCompanionId = companion?.id;
     setCompanion(null);
     setIsQuestCompleted(false);
     setMemories([]);
+    setBooks([]);
 
     try {
       localStorage.removeItem(COMPANION_STORAGE_KEY);
       localStorage.removeItem(QUEST_STORAGE_KEY);
       localStorage.removeItem(MEMORIES_STORAGE_KEY);
+      localStorage.removeItem(BOOKS_STATE_STORAGE_KEY);
     } catch (error) {
       console.error("Local reset failed:", error);
     }
@@ -293,9 +541,12 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         isUsingSupabase: isSupabaseConfigured,
         memories,
+        books,
         createCompanion,
         completeQuest,
         resetCompanion,
+        toggleFavoriteBook,
+        updateBookProgress,
       }}
     >
       {children}
