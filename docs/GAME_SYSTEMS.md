@@ -1,13 +1,11 @@
 # Game Systems
 
-## Future Progression
-- XP
-- Levels
-- Badges
-- Streaks
-- Mastery paths
-- Companion expression unlocks
-- Quest maps
+## Curiosity Progression
+- Curiosity filling meter (0 to 100)
+- Insight Milestones (completed curiosity loops)
+- Dynamic Companion Orb pulse frequency shifts
+- Unlocking deeper reflection capabilities
+- Safety-aware agent evaluation feedback
 
 ## Principle
-Rewards should reinforce learning, care, and growth.
+Rewards should reinforce curiosity, care, and growth, avoiding traditional addictive metrics.

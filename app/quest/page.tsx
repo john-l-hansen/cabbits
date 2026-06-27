@@ -126,7 +126,7 @@ export default function QuestPage() {
         {/* 1. Submitting Thinking Screen */}
         {isSubmitting ? (
           <div className="my-12 flex flex-col items-center">
-            <CompanionOrb mood="new" />
+            <CompanionOrb mood="new" curiosity={companion.curiosity} />
             <div className="mt-8 w-full rounded-2xl bg-[var(--surface-soft)] p-5 text-left border border-black/5 shadow-xs">
               <div className="flex items-center gap-2 mb-3">
                 <span className="relative flex h-2 w-2">
@@ -146,15 +146,15 @@ export default function QuestPage() {
           /* 2. Quest Completed Screen */
           <div className="mt-6 space-y-6">
             <div className="flex justify-center">
-              <CompanionOrb mood="idle" />
+              <CompanionOrb mood="idle" curiosity={companion.curiosity} />
             </div>
 
             <div className="text-center">
               <h1 className="text-3xl font-semibold tracking-tight text-emerald-800">
                 Quest Complete
               </h1>
-              <p className="mt-2 text-sm text-black/50">
-                {companion.name} registered your reflection.
+              <p className="mt-2 text-sm text-black/60">
+                {companion.name} registered your reflection and filled +{parsedMemory.curiosityEarned} Curiosity!
               </p>
             </div>
 
@@ -191,6 +191,9 @@ export default function QuestPage() {
                     <span className="rounded-full bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
                       {parsedMemory.evaluationRating}
                     </span>
+                    <span className="rounded-full bg-amber-50 border border-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-850 flex items-center gap-0.5">
+                      ✨ +{parsedMemory.curiosityEarned} Curiosity
+                    </span>
                   </div>
                 </div>
                 {parsedMemory.evaluationFeedback && (
@@ -221,7 +224,7 @@ export default function QuestPage() {
           /* 3. Quest Form Input Screen */
           <div className="mt-6">
             <div className="my-6 flex justify-center">
-              <CompanionOrb mood="quest" />
+              <CompanionOrb mood="quest" curiosity={companion.curiosity} />
             </div>
 
             <h1 className="text-3xl font-semibold tracking-tight">Notice one thing.</h1>

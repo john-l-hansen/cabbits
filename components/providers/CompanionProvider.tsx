@@ -62,6 +62,8 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
                 id: dbComp.id,
                 name: dbComp.name,
                 temperament: dbComp.temperament as CompanionTemperament,
+                curiosity: dbComp.curiosity ?? 0,
+                insightsCount: dbComp.insights_count ?? 0,
                 createdAt: dbComp.created_at,
               });
 
@@ -126,6 +128,8 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
       id: compId,
       name: name.trim(),
       temperament,
+      curiosity: 0,
+      insightsCount: 0,
       createdAt,
     };
 
@@ -149,6 +153,8 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
           id: compId,
           name: newCompanion.name,
           temperament: newCompanion.temperament,
+          curiosity: 0,
+          insights_count: 0,
           created_at: newCompanion.createdAt,
         });
 
@@ -175,9 +181,26 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
 
     setIsQuestCompleted(payload.isSafe);
 
-    if (!payload.isSafe) {
-      throw new Error("Content safety violation");
+    // Calculate curiosity rewards based on rating
+    let points = 15;
+    if (payload.evaluationRating === "Thoughtful") points = 50;
+    else if (payload.evaluationRating === "Developing") points = 30;
+
+    let newCuriosity = companion.curiosity + points;
+    let newInsightsCount = companion.insightsCount;
+
+    if (newCuriosity >= 100) {
+      newCuriosity = 0;
+      newInsightsCount += 1;
     }
+
+    const updatedCompanion: Companion = {
+      ...companion,
+      curiosity: newCuriosity,
+      insightsCount: newInsightsCount,
+    };
+
+    setCompanion(updatedCompanion);
 
     const memoryId = generateUUID();
     const createdAt = new Date().toISOString();
@@ -188,6 +211,7 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
       evaluationRating: payload.evaluationRating,
       evaluationFeedback: payload.evaluationFeedback,
       companionReflection: payload.companionReflection,
+      curiosityEarned: points,
     });
     const questId = "notice_one_thing";
 
@@ -204,6 +228,7 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
 
     // Local Storage Cache
     try {
+      localStorage.setItem(COMPANION_STORAGE_KEY, JSON.stringify(updatedCompanion));
       localStorage.setItem(QUEST_STORAGE_KEY, JSON.stringify(true));
       localStorage.setItem(MEMORIES_STORAGE_KEY, JSON.stringify(updatedMemories));
     } catch (error) {
@@ -213,6 +238,15 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
     // Persist to Supabase if configured
     if (isSupabaseConfigured && supabase) {
       try {
+        // Update companion's curiosity and insightsCount
+        await supabase
+          .from("companions")
+          .update({
+            curiosity: newCuriosity,
+            insights_count: newInsightsCount,
+          })
+          .eq("id", companion.id);
+
         const { error } = await supabase.from("companion_memories").insert({
           id: memoryId,
           companion_id: companion.id,

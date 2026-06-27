@@ -4,6 +4,8 @@ export type Companion = {
   id: string;
   name: string;
   temperament: CompanionTemperament;
+  curiosity: number;
+  insightsCount: number;
   createdAt: string;
 };
 

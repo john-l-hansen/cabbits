@@ -47,7 +47,10 @@ export default function Home() {
           </p>
 
           <div className="mb-8 flex justify-center">
-            <CompanionOrb mood={hasCompanion ? (isQuestCompleted ? "idle" : "quest") : "new"} />
+            <CompanionOrb
+              mood={hasCompanion ? (isQuestCompleted ? "idle" : "quest") : "new"}
+              curiosity={companion?.curiosity}
+            />
           </div>
 
           <h1 className="text-4xl font-semibold tracking-tight leading-10">
@@ -59,10 +62,31 @@ export default function Home() {
           <p className="mt-4 text-base leading-7 text-black/65">
             {hasCompanion
               ? isQuestCompleted
-                ? `You completed your first check-in. ${companion.name} is quiet, reflecting on how you grow together.`
+                ? `You completed your first check-in. ${companion.name} is reflecting on how you grow together.`
                 : `${companion.name} is a ${companion.temperament} companion, ready to guide you. Begin the first quest by studying one thing closely.`
               : "Create a companion that remembers how you grow, then begin a small quest built around curiosity, practice, and reflection."}
           </p>
+
+          {hasCompanion && (
+            <div className="mt-6 space-y-2.5 rounded-2xl bg-[var(--surface-soft)]/40 p-4 border border-black/5">
+              <div className="flex justify-between items-center text-xs text-black/55 font-medium">
+                <span>Curiosity</span>
+                <span>{companion.curiosity}% full</span>
+              </div>
+              <div className="h-2 w-full bg-black/5 rounded-full overflow-hidden">
+                <div
+                  style={{ width: `${companion.curiosity}%` }}
+                  className="h-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-dark)] transition-all duration-500"
+                />
+              </div>
+              {companion.insightsCount > 0 && (
+                <div className="text-[10px] text-black/45 font-bold uppercase tracking-wider flex items-center gap-1.5 pt-1">
+                  <span className="flex h-1.5 w-1.5 rounded-full bg-[var(--gold)]" />
+                  {companion.insightsCount} {companion.insightsCount === 1 ? "Insight" : "Insights"} Gathered
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Show the reflection summary if quest is completed */}
           {hasCompanion && isQuestCompleted && parsedMemory && (

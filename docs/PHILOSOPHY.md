@@ -3,6 +3,8 @@
 The companion comes first.
 
 Learning is collaborative.
+Curiosity is unique.
+Learning fills Curiosity.
 Curiosity is more valuable than speed.
 Mistakes are signals.
 Rewards reinforce effort rather than addiction.

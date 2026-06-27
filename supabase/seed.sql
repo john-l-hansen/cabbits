@@ -1,11 +1,13 @@
 -- Seed data for Cabbits Database
 
 -- Create a mock companion "Moss"
-INSERT INTO public.companions (id, name, temperament, created_at)
+INSERT INTO public.companions (id, name, temperament, curiosity, insights_count, created_at)
 VALUES (
     'a3b8c9d0-1234-5678-abcd-ef0123456789',
     'Moss',
     'curious',
+    40,
+    1,
     NOW() - INTERVAL '1 day'
 )
 ON CONFLICT (id) DO NOTHING;
@@ -20,11 +22,13 @@ VALUES (
 );
 
 -- Create a second mock companion "Echo"
-INSERT INTO public.companions (id, name, temperament, created_at)
+INSERT INTO public.companions (id, name, temperament, curiosity, insights_count, created_at)
 VALUES (
     'b4c9d0e1-2345-6789-bcde-f0123456789a',
     'Echo',
     'gentle',
+    0,
+    0,
     NOW() - INTERVAL '2 hours'
 )
 ON CONFLICT (id) DO NOTHING;
