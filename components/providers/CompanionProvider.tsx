@@ -13,7 +13,7 @@ type CompanionContextType = {
   memories: CompanionMemory[];
   books: Book[];
   createCompanion: (name: string, temperament: CompanionTemperament) => Promise<void>;
-  completeQuest: (userObservation: string) => Promise<void>;
+  completeQuest: (userObservation: string, questId?: string) => Promise<void>;
   resetCompanion: () => Promise<void>;
   toggleFavoriteBook: (bookId: string) => Promise<void>;
   updateBookProgress: (bookId: string, progress: number) => Promise<void>;
@@ -312,7 +312,7 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const completeQuest = async (userObservation: string) => {
+  const completeQuest = async (userObservation: string, questId: string = "notice_one_thing") => {
     if (!companion) return;
 
     setIsQuestCompleted(true);
@@ -361,8 +361,8 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
       evaluationFeedback: payload.evaluationFeedback,
       companionReflection: payload.companionReflection,
       curiosityEarned: points,
+      questId,
     });
-    const questId = "notice_one_thing";
 
     const newMemory: CompanionMemory = {
       id: memoryId,

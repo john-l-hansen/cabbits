@@ -334,15 +334,13 @@ export default function Home() {
             <span className="text-xs font-bold">Home</span>
           </button>
 
-          <button
-            onClick={() => setActiveSheet("explore")}
-            className={`flex flex-col items-center gap-0.5 cursor-pointer active:scale-95 transition-all ${
-              activeSheet === "explore" ? "text-amber-750 bg-amber-50/50 px-2 py-0.5 rounded-xl border border-amber-900/10 shadow-3xs" : "text-black/55"
-            }`}
+          <Link
+            href="/explore"
+            className="flex flex-col items-center gap-0.5 cursor-pointer active:scale-95 transition-all text-black/55"
           >
             <span className="text-xl">🌍</span>
             <span className="text-xs font-bold">Explore</span>
-          </button>
+          </Link>
 
           <Link
             href="/bookshelf"

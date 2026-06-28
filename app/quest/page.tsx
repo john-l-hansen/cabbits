@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CompanionOrb } from "@/components/companion/CompanionOrb";
 import { useCompanion } from "@/components/providers/CompanionProvider";
 
@@ -14,14 +14,42 @@ const thinkingSteps = [
   "Safety: Content verified. Synthesizing companion response...",
 ];
 
-export default function QuestPage() {
-  const { companion, isQuestCompleted, memories, completeQuest, isLoading } = useCompanion();
+function QuestContent() {
+  const { companion, memories, completeQuest, isLoading } = useCompanion();
+  const searchParams = useSearchParams();
+  const questId = searchParams.get("questId") || "notice_one_thing";
   const router = useRouter();
 
   const [observation, setObservation] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [error, setError] = useState("");
+
+  const QUEST_PROMPTS: Record<
+    string,
+    { title: string; description: string; placeholder: string; initialSaying: string }
+  > = {
+    notice_one_thing: {
+      title: "Notice one thing.",
+      description: "Look around the room and choose one object. What could it teach us if we studied it closely?",
+      placeholder: "I noticed the potted ivy leaf. It has structured veins branching out to feed the tip...",
+      initialSaying: "“We can start small. Curiosity usually does. Tell me about any object in the room.”",
+    },
+    watch_ripples: {
+      title: "Watch the Water Ripples",
+      description: "Walk over torescent Pond. Watch the ripples on the water. What patterns do they make?",
+      placeholder: "I noticed that when a raindrop hits the center, it forms concentric rings expanding outwards in perfect circles...",
+      initialSaying: "“Water carries reflections and secrets. Let's study how the waves dance on the surface.”",
+    },
+    count_flowers: {
+      title: "Count the Wildflowers",
+      description: "Walk into the Green Meadow and study the wildflowers. Pick a group of colors and describe how they cluster.",
+      placeholder: "I observed a cluster of five yellow buttercups growing tight against a purple clover stem...",
+      initialSaying: "“Meadows are full of numbers! Let's count how nature clusters its colors.”",
+    },
+  };
+
+  const activeQuest = QUEST_PROMPTS[questId] || QUEST_PROMPTS.notice_one_thing;
 
   // Redirect to companion creation if none exists
   useEffect(() => {
@@ -41,7 +69,7 @@ export default function QuestPage() {
       } else {
         timer = setTimeout(async () => {
           try {
-            await completeQuest(observation);
+            await completeQuest(observation, questId);
           } catch (err) {
             setError("Something went wrong. Let's try again.");
           } finally {
@@ -51,7 +79,7 @@ export default function QuestPage() {
       }
     }
     return () => clearTimeout(timer);
-  }, [isSubmitting, stepIndex, observation, completeQuest]);
+  }, [isSubmitting, stepIndex, observation, questId, completeQuest]);
 
   if (isLoading || !companion) {
     return (
@@ -64,20 +92,32 @@ export default function QuestPage() {
     );
   }
 
-  // Parse quest completion memory if exists
-  const questMemory = memories.find((m) => m.questId === "notice_one_thing");
+  // Parse specific quest completion status
+  const questMemory = memories.find((m) => {
+    if (m.questId === questId) return true;
+    try {
+      const parsed = JSON.parse(m.content);
+      return parsed.questId === questId;
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const isThisQuestCompleted = !!questMemory;
   let parsedMemory = null;
-  if (isQuestCompleted && questMemory) {
+
+  if (isThisQuestCompleted && questMemory) {
     try {
       parsedMemory = JSON.parse(questMemory.content);
     } catch (e) {
       parsedMemory = {
-        userObservation: "Studied an object closely.",
+        userObservation: observation,
         routedSpecialist: "Generalist",
         specialistFeedback: "Everyday objects carry hidden complexities.",
         evaluationRating: "Developing",
         evaluationFeedback: "",
         companionReflection: questMemory.content,
+        curiosityEarned: 15,
       };
     }
   }
@@ -85,7 +125,7 @@ export default function QuestPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (observation.trim().length < 10) {
-      setError("Please describe the object with a bit more detail (minimum 10 characters).");
+      setError("Please describe your observation with a bit more detail (minimum 10 characters).");
       return;
     }
     setError("");
@@ -93,14 +133,14 @@ export default function QuestPage() {
     setStepIndex(0);
   };
 
-  // Determine current routed specialist dynamically for loader log
+  // Determine specialist dynamically for loader feedback
   const textLower = observation.toLowerCase();
   let predictedSpecialist = "Generalist";
-  if (["plant", "leaf", "flower", "tree", "grass", "moss", "wood", "green", "pot"].some((w) => textLower.includes(w))) {
+  if (["plant", "leaf", "flower", "tree", "grass", "moss", "wood", "green", "pot", "clover", "buttercup"].some((w) => textLower.includes(w))) {
     predictedSpecialist = "Botany";
-  } else if (["clock", "shadow", "light", "time", "sun", "mirror", "reflection", "gravity", "metal"].some((w) => textLower.includes(w))) {
+  } else if (["clock", "shadow", "light", "time", "sun", "mirror", "reflection", "gravity", "metal", "ripple", "water", "pond", "wave"].some((w) => textLower.includes(w))) {
     predictedSpecialist = "Physics";
-  } else if (["book", "coin", "map", "old", "paper", "pen", "ink", "photo", "read"].some((w) => textLower.includes(w))) {
+  } else if (["book", "coin", "map", "old", "paper", "pen", "ink", "photo", "read", "rune"].some((w) => textLower.includes(w))) {
     predictedSpecialist = "History";
   }
 
@@ -111,12 +151,14 @@ export default function QuestPage() {
       ? `${predictedSpecialist} Specialist: Synthesizing educational feedback...`
       : thinkingSteps[stepIndex];
 
+  const exitUrl = questId === "notice_one_thing" ? "/" : "/explore";
+
   return (
     <main className="min-h-screen px-6 py-8">
       <section className="mx-auto max-w-md rounded-[2rem] border border-black/10 bg-white/75 p-6 shadow-sm backdrop-blur">
         <div className="flex items-center justify-between">
-          <Link href="/" className="text-sm text-black/50 hover:text-black/80 transition-colors">
-            ← Home
+          <Link href={exitUrl} className="text-sm text-black/50 hover:text-black/80 transition-colors">
+            ← Back
           </Link>
           <span className="text-xs font-semibold tracking-wider text-black/35 uppercase">
             Active Quest
@@ -142,7 +184,7 @@ export default function QuestPage() {
               </p>
             </div>
           </div>
-        ) : isQuestCompleted && parsedMemory ? (
+        ) : isThisQuestCompleted && parsedMemory ? (
           /* 2. Quest Completed Screen */
           <div className="mt-6 space-y-6">
             <div className="flex justify-center">
@@ -214,10 +256,10 @@ export default function QuestPage() {
             </div>
 
             <Link
-              href="/"
+              href={exitUrl}
               className="block w-full rounded-full bg-[var(--accent-dark)] px-5 py-4 text-center font-medium text-white shadow-sm hover:brightness-110 transition-all cursor-pointer"
             >
-              Return Home
+              {questId === "notice_one_thing" ? "Return Home" : "Return to Map"}
             </Link>
           </div>
         ) : (
@@ -227,11 +269,9 @@ export default function QuestPage() {
               <CompanionOrb mood="quest" curiosity={companion.curiosity} />
             </div>
 
-            <h1 className="text-3xl font-semibold tracking-tight">Notice one thing.</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">{activeQuest.title}</h1>
 
-            <p className="mt-3 leading-7 text-black/65">
-              Look around the room and choose one object. What could it teach us if we studied it closely?
-            </p>
+            <p className="mt-3 leading-7 text-black/65">{activeQuest.description}</p>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
               <label className="grid gap-2">
@@ -244,7 +284,7 @@ export default function QuestPage() {
                   }}
                   rows={4}
                   className="rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none focus:border-[var(--accent)] transition-all resize-none leading-6 text-sm"
-                  placeholder="I noticed the potted ivy leaf. It has structured veins branching out to feed the tip..."
+                  placeholder={activeQuest.placeholder}
                   maxLength={250}
                 />
                 <div className="flex justify-between items-center px-1">
@@ -273,13 +313,26 @@ export default function QuestPage() {
               <p className="text-xs font-semibold uppercase tracking-wider text-black/45">
                 {companion.name} says
               </p>
-              <p className="mt-2 leading-7 text-black/75">
-                “We can start small. Curiosity usually does. Tell me about any object in the room.”
-              </p>
+              <p className="mt-2 leading-7 text-black/75">{activeQuest.initialSaying}</p>
             </div>
           </div>
         )}
       </section>
     </main>
+  );
+}
+
+export default function QuestPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen px-6 py-8 flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <CompanionOrb mood="idle" />
+          <p className="text-sm text-black/40">Loading quest...</p>
+        </div>
+      </main>
+    }>
+      <QuestContent />
+    </Suspense>
   );
 }
