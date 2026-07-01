@@ -8,6 +8,7 @@ import { CompanionOrb } from "@/components/companion/CompanionOrb";
 import { Patrick_Hand } from "next/font/google";
 import { LOCATIONS, Location } from "@/lib/data/locations";
 import { QUESTS, Quest } from "@/lib/data/quests";
+import { getLandmarkComment } from "@/lib/agents/dialogue";
 
 const patrickHand = Patrick_Hand({
   weight: "400",
@@ -21,6 +22,7 @@ export default function ExplorePage() {
 
   const [timeStr, setTimeStr] = useState("10:30 AM");
   const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
+  const [weather, setWeather] = useState<"sunny" | "rainy" | "snowy">("sunny");
 
   // Redirect if companion is not created
   useEffect(() => {
@@ -97,10 +99,17 @@ export default function ExplorePage() {
         
         {/* TIME & WEATHER HEADER */}
         <div className="absolute top-4 inset-x-4 flex justify-between items-center z-20">
-          <div className="bg-[#FAF7F0]/90 border border-black/10 shadow-3xs rounded-full px-3 py-1.5 flex items-center gap-1.5 text-sm font-semibold">
-            <span>☀️</span>
+          <button
+            onClick={() => {
+              if (weather === "sunny") setWeather("rainy");
+              else if (weather === "rainy") setWeather("snowy");
+              else setWeather("sunny");
+            }}
+            className="bg-[#FAF7F0]/90 border border-black/10 shadow-3xs rounded-full px-3 py-1.5 flex items-center gap-1.5 text-sm font-semibold cursor-pointer active:scale-95 transition-all outline-none"
+          >
+            <span>{weather === "sunny" ? "☀️" : weather === "rainy" ? "🌧️" : "❄️"}</span>
             <span>{timeStr}</span>
-          </div>
+          </button>
 
           <div className="bg-[#FAF7F0]/90 border border-black/10 shadow-3xs rounded-full px-3 py-1.5 flex items-center gap-1 text-sm font-semibold">
             <span className="text-amber-500">🪙</span>
@@ -193,6 +202,21 @@ export default function ExplorePage() {
             </div>
 
             <p className="text-xs leading-5 text-black/65">{activeDetails.description}</p>
+
+            {/* Pip's personality speech bubble */}
+            <div className="flex gap-3 bg-[#FAF7F0] p-3 rounded-2xl border-2 border-black/40 shadow-3xs relative animate-fade-in">
+              <div className="h-10 w-10 bg-white border-2 border-black/60 rounded-full flex items-center justify-center text-xl shrink-0 select-none">
+                🐰
+              </div>
+              <div className="text-left min-w-0">
+                <span className="text-[9px] font-bold text-black/45 uppercase tracking-wide">
+                  {companion.name} reflects
+                </span>
+                <p className="text-xs font-medium text-black/75 mt-0.5 leading-normal">
+                  {getLandmarkComment(selectedLoc, companion, weather)}
+                </p>
+              </div>
+            </div>
 
             {/* Quests Checklist */}
             <div className="space-y-2.5">

@@ -8,6 +8,7 @@ import { CompanionOrb } from "@/components/companion/CompanionOrb";
 import { CompanionMood } from "@/types";
 import { Patrick_Hand } from "next/font/google";
 import { ITEMS, Item } from "@/lib/data/items";
+import { getCompanionGreeting } from "@/lib/agents/dialogue";
 
 const patrickHand = Patrick_Hand({
   weight: "400",
@@ -104,15 +105,17 @@ export default function Home() {
   // Set default initial dialog bubble
   useEffect(() => {
     if (companion) {
-      if (companion.cabbitMood === "sleeping") {
-        setBubbleText("Zzz... dreaming of carrots...");
-      } else if (companion.cabbitMood === "happy") {
-        setBubbleText("Mmm, thank you! I love snacks!");
-      } else {
-        setBubbleText(`Hi! Let's read a story together today!`);
-      }
+      const hour = new Date().getHours();
+      let timeOfDay: "morning" | "afternoon" | "evening" | "night" = "afternoon";
+      if (hour >= 5 && hour < 12) timeOfDay = "morning";
+      else if (hour >= 12 && hour < 17) timeOfDay = "afternoon";
+      else if (hour >= 17 && hour < 21) timeOfDay = "evening";
+      else timeOfDay = "night";
+
+      const text = getCompanionGreeting(companion, weather, timeOfDay);
+      setBubbleText(text);
     }
-  }, [companion]);
+  }, [companion, weather]);
 
   if (isLoading || !companion) {
     return (
@@ -134,39 +137,14 @@ export default function Home() {
 
   // Cabbit click dialogues
   const handleCabbitClick = () => {
-    if (companion.cabbitMood === "sleeping") {
-      setBubbleText("Zzz... warm blankets...");
-      return;
-    }
+    const hour = new Date().getHours();
+    let timeOfDay: "morning" | "afternoon" | "evening" | "night" = "afternoon";
+    if (hour >= 5 && hour < 12) timeOfDay = "morning";
+    else if (hour >= 12 && hour < 17) timeOfDay = "afternoon";
+    else if (hour >= 17 && hour < 21) timeOfDay = "evening";
+    else timeOfDay = "night";
 
-    const gentleLines = [
-      "I'm so glad we are reading together.",
-      "Let's take a slow breath. Ready?",
-      "Can we read 'The Missing Acorns' tonight?",
-    ];
-    const curiousLines = [
-      "I wonder what stars do during the daytime.",
-      "If we study a coin closely, what does it show?",
-      "What lies beyond the valley hills?",
-    ];
-    const playfulLines = [
-      "Let's hop around the rug! Bounce bounce!",
-      "I'm feeling extra energetic!",
-      "Feed me a carrot snack, pretty please! 🥕",
-    ];
-    const focusedLines = [
-      "I am ready to solve a hard logic puzzle.",
-      "Let's sit down and inspect our bookmarks.",
-      "Practice makes us better and wiser.",
-    ];
-
-    let pool = gentleLines;
-    if (companion.temperament === "curious") pool = curiousLines;
-    else if (companion.temperament === "playful") pool = playfulLines;
-    else if (companion.temperament === "focused") pool = focusedLines;
-
-    const randomLine = pool[Math.floor(Math.random() * pool.length)];
-    setBubbleText(randomLine);
+    setBubbleText(getCompanionGreeting(companion, weather, timeOfDay));
   };
 
   // Feed trigger wrapper
