@@ -51,3 +51,14 @@ export type Item = {
   locationOrigin: string;
 };
 
+export type DraftObject = {
+  id: string;
+  companionId: string;
+  type: "item" | "quest";
+  objectId: string;
+  data: any;
+  status: "draft" | "approved" | "discarded";
+  createdAt: string;
+};
+
+

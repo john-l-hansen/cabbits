@@ -50,10 +50,14 @@ export default function Home() {
     isLoading,
     memories,
     books,
+    items,
+    draftObjects,
     resetCompanion,
     feedCabbit,
     toggleSleep,
     addCoins,
+    approveDraftObject,
+    discardDraftObject,
   } = useCompanion();
 
   const router = useRouter();
@@ -67,6 +71,7 @@ export default function Home() {
   const [readLetters, setReadLetters] = useState<string[]>([]);
   const [zoomTransition, setZoomTransition] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  const [profileSubTab, setProfileSubTab] = useState<"info" | "dreams">("info");
 
   // Time Tick Hook
   useEffect(() => {
@@ -508,7 +513,7 @@ export default function Home() {
                 ) : (
                   <div className="grid grid-cols-3 gap-2">
                     {companion.inventory.map((itemId) => {
-                      const item = ITEMS[itemId];
+                      const item = items[itemId];
                       if (!item) return null;
                       return (
                         <button
@@ -555,58 +560,142 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Bio summary */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 bg-white p-3 rounded-2xl border-2 border-black/30">
-                  <div className="scale-75 shrink-0 -mt-2">
-                    <CompanionOrb mood="idle" curiosity={companion.curiosity} />
-                  </div>
-                  <div>
-                    <h4 className="text-base font-bold leading-tight">{companion.name}</h4>
-                    <p className="text-xxs uppercase tracking-wider text-[var(--accent-dark)] font-bold">{companion.temperament} companion</p>
-                    <p className="text-[10px] text-black/40 font-medium">Joined {new Date(companion.createdAt).toLocaleDateString()}</p>
-                  </div>
-                </div>
-
-                {/* Progress Indicators */}
-                <div className="space-y-3 p-3 bg-[#FAF7F0] border-2 border-black/40 rounded-2xl">
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xxs font-bold uppercase tracking-wider text-black/40">
-                      <span>Curiosity Gauge</span>
-                      <span>{companion.curiosity}%</span>
-                    </div>
-                    <div className="h-2 w-full bg-black/5 rounded-full overflow-hidden">
-                      <div
-                        style={{ width: `${companion.curiosity}%` }}
-                        className="h-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-dark)]"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between text-xs font-bold pt-1 border-t border-black/5">
-                    <span>Insights Gathered:</span>
-                    <span>✨ {companion.insightsCount}</span>
-                  </div>
-
-                  <div className="flex justify-between text-xs font-bold">
-                    <span>Carrot Coins:</span>
-                    <span>🪙 {companion.carrotCoins}</span>
-                  </div>
-                </div>
-
-                {/* Reset session button */}
+              {/* Tab Toggle buttons */}
+              <div className="flex gap-2 p-1 bg-black/5 rounded-full border border-black/5">
                 <button
-                  onClick={() => {
-                    if (confirm("Reset companion? This will delete all local progress.")) {
-                      resetCompanion();
-                      router.replace("/companion/new");
-                    }
-                  }}
-                  className="w-full rounded-full border border-red-200 bg-red-50 py-3.5 text-center font-bold text-red-600 cursor-pointer hover:bg-red-100/50 active:scale-95 transition-all text-xs"
+                  onClick={() => setProfileSubTab("info")}
+                  className={`flex-1 py-1.5 rounded-full font-bold text-xs cursor-pointer active:scale-97 transition-all ${
+                    profileSubTab === "info" ? "bg-white text-black shadow-3xs border border-black/5" : "text-black/50 hover:text-black/75"
+                  }`}
                 >
-                  Reset Companion
+                  Status
+                </button>
+                <button
+                  onClick={() => setProfileSubTab("dreams")}
+                  className={`flex-1 py-1.5 rounded-full font-bold text-xs cursor-pointer active:scale-97 transition-all flex items-center justify-center gap-1.5 ${
+                    profileSubTab === "dreams" ? "bg-white text-black shadow-3xs border border-black/5" : "text-black/50 hover:text-black/75"
+                  }`}
+                >
+                  <span>Dream Log</span>
+                  {draftObjects.length > 0 && (
+                    <span className="bg-red-500 text-white rounded-full text-[9px] h-4 min-w-4 px-1 flex items-center justify-center font-bold">
+                      {draftObjects.length}
+                    </span>
+                  )}
                 </button>
               </div>
+
+              {profileSubTab === "info" ? (
+                /* Bio summary & Info */
+                <div className="space-y-4 animate-fade-in">
+                  <div className="flex items-center gap-4 bg-white p-3 rounded-2xl border-2 border-black/30">
+                    <div className="scale-75 shrink-0 -mt-2">
+                      <CompanionOrb mood="idle" curiosity={companion.curiosity} />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-bold leading-tight">{companion.name}</h4>
+                      <p className="text-xxs uppercase tracking-wider text-[var(--accent-dark)] font-bold">{companion.temperament} companion</p>
+                      <p className="text-[10px] text-black/40 font-medium">Joined {new Date(companion.createdAt).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+
+                  {/* Progress Indicators */}
+                  <div className="space-y-3 p-3 bg-[#FAF7F0] border-2 border-black/40 rounded-2xl">
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-xxs font-bold uppercase tracking-wider text-black/40">
+                        <span>Curiosity Gauge</span>
+                        <span>{companion.curiosity}%</span>
+                      </div>
+                      <div className="h-2 w-full bg-black/5 rounded-full overflow-hidden">
+                        <div
+                          style={{ width: `${companion.curiosity}%` }}
+                          className="h-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-dark)]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between text-xs font-bold pt-1 border-t border-black/5">
+                      <span>Insights Gathered:</span>
+                      <span>✨ {companion.insightsCount}</span>
+                    </div>
+
+                    <div className="flex justify-between text-xs font-bold">
+                      <span>Carrot Coins:</span>
+                      <span>🪙 {companion.carrotCoins}</span>
+                    </div>
+                  </div>
+
+                  {/* Reset session button */}
+                  <button
+                    onClick={() => {
+                      if (confirm("Reset companion? This will delete all local progress.")) {
+                        resetCompanion();
+                        router.replace("/companion/new");
+                      }
+                    }}
+                    className="w-full rounded-full border border-red-200 bg-red-50 py-3.5 text-center font-bold text-red-600 cursor-pointer hover:bg-red-100/50 active:scale-95 transition-all text-xs"
+                  >
+                    Reset Companion
+                  </button>
+                </div>
+              ) : (
+                /* Dream Log list card proposals */
+                <div className="space-y-4 animate-fade-in text-center">
+                  <p className="text-[11px] leading-normal text-black/60">
+                    Pip dreams up new creations based on observations! Approve them to integrate them.
+                  </p>
+
+                  {draftObjects.length === 0 ? (
+                    <div className="p-8 text-center bg-white border-2 border-dashed border-black/25 rounded-2xl">
+                      <span className="text-3xl select-none">💭</span>
+                      <p className="text-xs text-black/40 italic mt-2">
+                        No active dreams. Study landmarks on the Explore Map to trigger ideas!
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {draftObjects.map((d) => {
+                        const item = d.data.item;
+                        const quest = d.data.quest;
+                        if (!item || !quest) return null;
+
+                        return (
+                          <div key={d.id} className="p-4 bg-white border-2 border-black/60 rounded-2xl space-y-3 shadow-3xs text-left animate-fade-in">
+                            <div className="flex items-center gap-3">
+                              <span className="text-3.5xl select-none shrink-0">{item.icon}</span>
+                              <div className="min-w-0 flex-1">
+                                <h4 className="text-xs font-bold text-black/85 truncate">{item.name}</h4>
+                                <p className="text-[9px] text-[var(--accent-dark)] uppercase font-bold tracking-wider truncate">
+                                  Quest: {quest.title}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="bg-[#FAF7F0] p-2.5 rounded-xl border border-black/5 text-[11px] leading-relaxed text-black/70 italic">
+                              “{d.data.pipReason}”
+                            </div>
+
+                            <div className="flex gap-2 pt-0.5">
+                              <button
+                                onClick={() => approveDraftObject(d.objectId)}
+                                className="flex-1 rounded-full bg-[var(--accent-dark)] py-2 text-center text-xs font-bold text-white shadow-3xs cursor-pointer hover:brightness-110 active:scale-95 transition-all"
+                              >
+                                ✔️ Approve & Add
+                              </button>
+                              <button
+                                onClick={() => discardDraftObject(d.objectId)}
+                                className="rounded-full border border-red-200 bg-red-50 px-3 py-2 text-center text-xs font-bold text-red-650 shadow-3xs cursor-pointer hover:bg-red-100/50 active:scale-95 transition-all"
+                              >
+                                Discard
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}

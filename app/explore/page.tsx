@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { useCompanion } from "@/components/providers/CompanionProvider";
 import { CompanionOrb } from "@/components/companion/CompanionOrb";
 import { Patrick_Hand } from "next/font/google";
-import { LOCATIONS, Location } from "@/lib/data/locations";
-import { QUESTS, Quest } from "@/lib/data/quests";
+import { Location } from "@/lib/data/locations";
+import { Quest } from "@/lib/data/quests";
 import { getLandmarkComment } from "@/lib/agents/dialogue";
 
 const patrickHand = Patrick_Hand({
@@ -17,7 +17,7 @@ const patrickHand = Patrick_Hand({
 });
 
 export default function ExplorePage() {
-  const { companion, isLoading, memories } = useCompanion();
+  const { companion, isLoading, memories, quests, locations } = useCompanion();
   const router = useRouter();
 
   const [timeStr, setTimeStr] = useState("10:30 AM");
@@ -80,11 +80,11 @@ export default function ExplorePage() {
     return true;
   };
 
-  const activeDetails = selectedLoc ? LOCATIONS[selectedLoc] : null;
+  const activeDetails = selectedLoc ? locations[selectedLoc] : null;
 
   // Retrieve quest entities linked to this location
   const locationQuests = activeDetails
-    ? activeDetails.questIds.map((id) => QUESTS[id]).filter(Boolean)
+    ? activeDetails.questIds.map((id) => quests[id]).filter(Boolean)
     : [];
 
   // Find the primary launchable quest in the active location
@@ -122,7 +122,7 @@ export default function ExplorePage() {
           className="relative flex-1 bg-cover bg-center"
           style={{ backgroundImage: "url(/assets/cabbits_overhead_map.png)" }}
         >
-          {Object.values(LOCATIONS).map((loc) => (
+          {Object.values(locations).map((loc) => (
             <button
               key={loc.id}
               onClick={() => setSelectedLoc(loc.id)}

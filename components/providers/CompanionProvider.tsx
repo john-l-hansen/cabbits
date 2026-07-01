@@ -1,11 +1,13 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Companion, CompanionTemperament, CompanionMemory, Book, CompanionMood, CompanionLocation } from "@/types";
+import { Companion, CompanionTemperament, CompanionMemory, Book, CompanionMood, CompanionLocation, Item, DraftObject } from "@/types";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { runAgentSimulation } from "@/lib/agents/simulation";
 import { DEFAULT_BOOKS } from "@/lib/data/books";
-import { QUESTS } from "@/lib/data/quests";
+import { QUESTS, Quest } from "@/lib/data/quests";
+import { ITEMS } from "@/lib/data/items";
+import { LOCATIONS, Location } from "@/lib/data/locations";
 
 type CompanionContextType = {
   companion: Companion | null;
@@ -14,6 +16,10 @@ type CompanionContextType = {
   isUsingSupabase: boolean;
   memories: CompanionMemory[];
   books: Book[];
+  items: Record<string, Item>;
+  quests: Record<string, Quest>;
+  locations: Record<string, Location>;
+  draftObjects: DraftObject[];
   createCompanion: (name: string, temperament: CompanionTemperament) => Promise<void>;
   completeQuest: (userObservation: string, questId?: string) => Promise<void>;
   resetCompanion: () => Promise<void>;
@@ -22,6 +28,8 @@ type CompanionContextType = {
   feedCabbit: () => Promise<void>;
   toggleSleep: () => Promise<void>;
   addCoins: (amount: number) => Promise<void>;
+  approveDraftObject: (objectId: string) => Promise<void>;
+  discardDraftObject: (objectId: string) => Promise<void>;
 };
 
 const CompanionContext = createContext<CompanionContextType | undefined>(undefined);
@@ -31,7 +39,7 @@ const QUEST_STORAGE_KEY = "cabbits_quest_completed_v1";
 const MEMORIES_STORAGE_KEY = "cabbits_memories_v1";
 const BOOKS_STATE_STORAGE_KEY = "cabbits_books_state_v1";
 
-// Safe cross-platform UUID generator for PostgreSQL UUID fields
+// Safe cross-platform UUID generator
 const generateUUID = () => {
   if (typeof window !== "undefined" && window.crypto && window.crypto.randomUUID) {
     return window.crypto.randomUUID();
@@ -49,6 +57,12 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
   const [memories, setMemories] = useState<CompanionMemory[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Dynamic registers supporting approved proposals
+  const [activeItems, setActiveItems] = useState<Record<string, Item>>(ITEMS);
+  const [activeQuests, setActiveQuests] = useState<Record<string, Quest>>(QUESTS);
+  const [activeLocations, setActiveLocations] = useState<Record<string, Location>>(LOCATIONS);
+  const [draftObjects, setDraftObjects] = useState<DraftObject[]>([]);
 
   // Initialize and load state
   useEffect(() => {
@@ -75,6 +89,52 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
                 .eq("companion_id", dbComp.id);
 
               const inventoryList = dbItems && !itemsError ? dbItems.map((it) => it.item_id) : [];
+
+              // Fetch companion draft objects from Supabase
+              const { data: dbDrafts, error: draftsError } = await supabase
+                .from("companion_draft_objects")
+                .select("*")
+                .eq("companion_id", dbComp.id);
+
+              const activeDraftsList: DraftObject[] = [];
+              let itemsMap = { ...ITEMS };
+              let questsMap = { ...QUESTS };
+              let locsMap = { ...LOCATIONS };
+
+              if (dbDrafts && !draftsError) {
+                dbDrafts.forEach((d) => {
+                  const itemData = d.data.item;
+                  const questData = d.data.quest;
+
+                  if (d.status === "draft") {
+                    activeDraftsList.push({
+                      id: d.id,
+                      companionId: d.companion_id,
+                      type: d.type as "item" | "quest",
+                      objectId: d.object_id,
+                      data: d.data,
+                      status: "draft",
+                      createdAt: d.created_at
+                    });
+                  } else if (d.status === "approved" && itemData && questData) {
+                    itemsMap[itemData.id] = itemData;
+                    questsMap[questData.id] = questData;
+                    
+                    const locationId = questData.locationId;
+                    if (locsMap[locationId] && !locsMap[locationId].questIds.includes(questData.id)) {
+                      locsMap[locationId] = {
+                        ...locsMap[locationId],
+                        questIds: [...locsMap[locationId].questIds, questData.id]
+                      };
+                    }
+                  }
+                });
+              }
+
+              setDraftObjects(activeDraftsList);
+              setActiveItems(itemsMap);
+              setActiveQuests(questsMap);
+              setActiveLocations(locsMap);
 
               setCompanion({
                 id: dbComp.id,
@@ -135,7 +195,7 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
               });
               setBooks(hydratedBooks);
             } else {
-              // Companion not found in DB (e.g. database cleared), clean up local storage references
+              // Companion not found in DB
               localStorage.removeItem(COMPANION_STORAGE_KEY);
               localStorage.removeItem(QUEST_STORAGE_KEY);
               localStorage.removeItem(MEMORIES_STORAGE_KEY);
@@ -143,7 +203,20 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
             }
           }
         } else {
-          console.warn("Cabbits: Supabase environment variables missing. Falling back to local storage.");
+          console.warn("Cabbits: Supabase missing. Falling back to local storage.");
+          
+          // Hydrate approved lists
+          const savedItems = localStorage.getItem("cabbits_approved_items_v1");
+          const savedQuests = localStorage.getItem("cabbits_approved_quests_v1");
+          const savedLocs = localStorage.getItem("cabbits_approved_locations_v1");
+          if (savedItems) setActiveItems(JSON.parse(savedItems));
+          if (savedQuests) setActiveQuests(JSON.parse(savedQuests));
+          if (savedLocs) setActiveLocations(JSON.parse(savedLocs));
+
+          // Load drafts
+          const savedDrafts = localStorage.getItem("cabbits_drafts_v1");
+          if (savedDrafts) setDraftObjects(JSON.parse(savedDrafts));
+
           const savedCompanion = localStorage.getItem(COMPANION_STORAGE_KEY);
           const savedQuest = localStorage.getItem(QUEST_STORAGE_KEY);
           const savedMemories = localStorage.getItem(MEMORIES_STORAGE_KEY);
@@ -215,6 +288,10 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
     setCompanion(newCompanion);
     setIsQuestCompleted(false);
     setMemories([]);
+    setDraftObjects([]);
+    setActiveItems(ITEMS);
+    setActiveQuests(QUESTS);
+    setActiveLocations(LOCATIONS);
     
     // Reset books collection
     const freshBooks = DEFAULT_BOOKS.map((b) => ({ ...b, progress: 0, isFavorite: false } as Book));
@@ -226,6 +303,10 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(QUEST_STORAGE_KEY, JSON.stringify(false));
       localStorage.setItem(MEMORIES_STORAGE_KEY, JSON.stringify([]));
       localStorage.setItem(BOOKS_STATE_STORAGE_KEY, JSON.stringify([]));
+      localStorage.removeItem("cabbits_drafts_v1");
+      localStorage.removeItem("cabbits_approved_items_v1");
+      localStorage.removeItem("cabbits_approved_quests_v1");
+      localStorage.removeItem("cabbits_approved_locations_v1");
     } catch (error) {
       console.error("Local save failed:", error);
     }
@@ -233,7 +314,7 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
     // Persist to Supabase if configured
     if (isSupabaseConfigured && supabase) {
       try {
-        const { error } = await supabase.from("companions").insert({
+        await supabase.from("companions").insert({
           id: compId,
           name: newCompanion.name,
           temperament: newCompanion.temperament,
@@ -244,12 +325,6 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
           cabbit_location: "rug",
           created_at: newCompanion.createdAt,
         });
-
-        if (error) {
-          console.error("Failed to persist companion to Supabase:", error);
-        } else {
-          console.log(`Cabbits: Persisted companion '${name}' to Supabase.`);
-        }
       } catch (error) {
         console.error("Failed database client connection:", error);
       }
@@ -287,7 +362,7 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
     const coinReward = 30;
 
     // Check if quest awards a collectible item
-    const questData = QUESTS[questId];
+    const questData = activeQuests[questId];
     const rewardItemId = questData?.rewardItemId;
 
     let newInventory = [...companion.inventory];
@@ -330,6 +405,118 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
     const updatedMemories = [newMemory, ...memories];
     setMemories(updatedMemories);
 
+    // Proposal Generator logic (propose draft item/quest)
+    let proposedType: "item" | "quest" | null = null;
+    let proposedObjectId = "";
+    let proposedData: any = null;
+
+    if (questId === "watch_ripples") {
+      proposedType = "item";
+      proposedObjectId = "moonlit_pearl";
+      proposedData = {
+        item: {
+          id: "moonlit_pearl",
+          name: "Moonlit Pearl",
+          description: "A glowing white pearl found deep in the silt of Crescent Pond. Pip imagined this because of your water observations.",
+          icon: "🔮",
+          type: "collectible",
+          locationOrigin: "Crescent Pond"
+        },
+        quest: {
+          id: "pearl_hunt",
+          title: "Seek the Moonlit Pearl",
+          description: "Dive deep into the glowing silt of Crescent Pond to locate the mythical pearl Pip dreamed of.",
+          placeholder: "I searched the sandy bottom of the pond near the lily pads and found the glowing sphere...",
+          initialSaying: "“The pearl is down there! Let's search the glowing silt together.”",
+          rewardItemId: "moonlit_pearl",
+          isLocked: false,
+          unlockCondition: "",
+          locationId: "pond"
+        },
+        pipReason: `I imagined a glowing pearl hidden in the pond mud because of how you noticed the raindrop ripples expanding, ${companion.name}!`
+      };
+    } else if (questId === "count_flowers") {
+      proposedType = "item";
+      proposedObjectId = "clover_nectar";
+      proposedData = {
+        item: {
+          id: "clover_nectar",
+          name: "Clover Nectar",
+          description: "A vial of sweet nectar collected from clover blooms. Pip imagined this because of your wildflower counting.",
+          icon: "🧪",
+          type: "collectible",
+          locationOrigin: "Green Meadow"
+        },
+        quest: {
+          id: "nectar_brew",
+          title: "Harvest the Clover Nectar",
+          description: "Help Pip squeeze the sweetest clover blooms in Green Meadow to distill a tiny vial of glowing nectar.",
+          placeholder: "I selected five blooming purple clovers and carefully extracted the sweet nectar drop by drop...",
+          initialSaying: "“Let's distill the clover blooms! Careful not to spill any drops.”",
+          rewardItemId: "clover_nectar",
+          isLocked: false,
+          unlockCondition: "",
+          locationId: "meadow"
+        },
+        pipReason: "I dreamed of gathering sweet nectar because of your beautiful observation counting the wildflower clusters in the field!"
+      };
+    } else if (questId === "notice_one_thing") {
+      proposedType = "item";
+      proposedObjectId = "mossy_bark";
+      proposedData = {
+        item: {
+          id: "mossy_bark",
+          name: "Mossy Bark",
+          description: "A chunk of ancient oak bark thick with glowing green moss. Pip imagined this because of your acorn study.",
+          icon: "🪵",
+          type: "collectible",
+          locationOrigin: "Oak Forest"
+        },
+        quest: {
+          id: "bark_rubbing",
+          title: "Study the Mossy Bark",
+          description: "Take a charcoal rubbing of the ancient patterns engraved in the mossy oak bark of the Wise Owl's tree.",
+          placeholder: "I held the parchment tight against the bark and shaded the ancient spiral grooves with charcoal...",
+          initialSaying: "“The bark has ancient spirals! Let's take a charcoal rubbing together.”",
+          rewardItemId: "mossy_bark",
+          isLocked: false,
+          unlockCondition: "",
+          locationId: "forest"
+        },
+        pipReason: "I imagined copying ancient symbols from the tree bark because of your wonderful study of the hidden acorn stash!"
+      };
+    }
+
+    let nextDrafts = [...draftObjects];
+
+    if (proposedType && proposedObjectId && proposedData) {
+      const alreadyProposed = draftObjects.some((d) => d.objectId === proposedObjectId) || 
+                              newInventory.includes(proposedObjectId);
+
+      if (!alreadyProposed) {
+        const draftId = generateUUID();
+        const draftCreatedAt = new Date().toISOString();
+        const newDraft: DraftObject = {
+          id: draftId,
+          companionId: companion.id,
+          type: proposedType,
+          objectId: proposedObjectId,
+          data: proposedData,
+          status: "draft",
+          createdAt: draftCreatedAt
+        };
+
+        nextDrafts = [newDraft, ...draftObjects];
+        setDraftObjects(nextDrafts);
+
+        try {
+          localStorage.setItem("cabbits_drafts_v1", JSON.stringify(nextDrafts));
+        } catch (e) {
+          console.error("Local save failed for drafts:", e);
+        }
+      }
+    }
+
     // Local Storage Cache
     try {
       localStorage.setItem(COMPANION_STORAGE_KEY, JSON.stringify(updatedCompanion));
@@ -342,7 +529,6 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
     // Persist to Supabase if configured
     if (isSupabaseConfigured && supabase) {
       try {
-        // Update companion's fields
         await supabase
           .from("companions")
           .update({
@@ -353,7 +539,7 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
           })
           .eq("id", companion.id);
 
-        const { error: memError } = await supabase.from("companion_memories").insert({
+        await supabase.from("companion_memories").insert({
           id: memoryId,
           companion_id: companion.id,
           content: contentJson,
@@ -361,22 +547,104 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
           created_at: createdAt,
         });
 
-        if (memError) {
-          console.error("Failed to save memory to Supabase:", memError);
-        }
-
-        // Save companion item if new
         if (rewardItemId) {
-          const { error: itemError } = await supabase.from("companion_items").insert({
+          await supabase.from("companion_items").insert({
             companion_id: companion.id,
             item_id: rewardItemId,
           });
-          if (itemError) {
-            console.warn("Failed to persist companion item to Supabase:", itemError);
-          }
+        }
+
+        // Insert new draft to DB if spawned
+        const newlyCreatedDraft = nextDrafts.find((d) => d.objectId === proposedObjectId && d.status === "draft");
+        if (newlyCreatedDraft) {
+          await supabase.from("companion_draft_objects").insert({
+            id: newlyCreatedDraft.id,
+            companion_id: companion.id,
+            type: newlyCreatedDraft.type,
+            object_id: newlyCreatedDraft.objectId,
+            data: newlyCreatedDraft.data,
+            status: "draft",
+            created_at: newlyCreatedDraft.createdAt
+          });
         }
       } catch (error) {
-        console.error("Failed database client connection:", error);
+        console.error("Failed database connection:", error);
+      }
+    }
+  };
+
+  const approveDraftObject = async (objectId: string) => {
+    if (!companion) return;
+
+    const draft = draftObjects.find((d) => d.objectId === objectId);
+    if (!draft) return;
+
+    const itemData = draft.data.item;
+    const questData = draft.data.quest;
+
+    const newItems = { ...activeItems, [itemData.id]: itemData };
+    const newQuests = { ...activeQuests, [questData.id]: questData };
+
+    const locationId = questData.locationId;
+    const location = activeLocations[locationId];
+    let newLocations = { ...activeLocations };
+    if (location && !location.questIds.includes(questData.id)) {
+      newLocations[locationId] = {
+        ...location,
+        questIds: [...location.questIds, questData.id]
+      };
+    }
+
+    setActiveItems(newItems);
+    setActiveQuests(newQuests);
+    setActiveLocations(newLocations);
+
+    const updatedDrafts = draftObjects.filter((d) => d.objectId !== objectId);
+    setDraftObjects(updatedDrafts);
+
+    try {
+      localStorage.setItem("cabbits_drafts_v1", JSON.stringify(updatedDrafts));
+      localStorage.setItem("cabbits_approved_items_v1", JSON.stringify(newItems));
+      localStorage.setItem("cabbits_approved_quests_v1", JSON.stringify(newQuests));
+      localStorage.setItem("cabbits_approved_locations_v1", JSON.stringify(newLocations));
+    } catch (e) {
+      console.error("Local save failed on approval:", e);
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase
+          .from("companion_draft_objects")
+          .update({ status: "approved" })
+          .eq("companion_id", companion.id)
+          .eq("object_id", objectId);
+      } catch (e) {
+        console.error("Supabase update failed on approval:", e);
+      }
+    }
+  };
+
+  const discardDraftObject = async (objectId: string) => {
+    if (!companion) return;
+
+    const updatedDrafts = draftObjects.filter((d) => d.objectId !== objectId);
+    setDraftObjects(updatedDrafts);
+
+    try {
+      localStorage.setItem("cabbits_drafts_v1", JSON.stringify(updatedDrafts));
+    } catch (e) {
+      console.error("Local save failed on discard:", e);
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase
+          .from("companion_draft_objects")
+          .update({ status: "discarded" })
+          .eq("companion_id", companion.id)
+          .eq("object_id", objectId);
+      } catch (e) {
+        console.error("Supabase update failed on discard:", e);
       }
     }
   };
@@ -395,15 +663,13 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
 
     setBooks(updatedBooks);
 
-    // Local Storage Cache
     try {
       const serializable = updatedBooks.map((b) => ({ id: b.id, progress: b.progress, isFavorite: b.isFavorite }));
       localStorage.setItem(BOOKS_STATE_STORAGE_KEY, JSON.stringify(serializable));
     } catch (e) {
-      console.error("Local save failed for book favorite toggle:", e);
+      console.error("Local save failed for favorite:", e);
     }
 
-    // Persist to Supabase if configured
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from("companion_books").upsert(
@@ -414,9 +680,8 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
           },
           { onConflict: "companion_id,book_id" }
         );
-        console.log("Cabbits: Upserted book favorite in Supabase.");
       } catch (e) {
-        console.error("Database upsert failed for book favorite:", e);
+        console.error("Database upsert failed for favorite:", e);
       }
     }
   };
@@ -428,12 +693,11 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
     const prevProgress = targetBook?.progress ?? 0;
     if (prevProgress === newProgress) return;
 
-    // Fill curiosity when finishing a chapter / advancing progress!
     let curiosityReward = 0;
     let coinReward = 0;
     if (newProgress > prevProgress) {
       curiosityReward = 20;
-      coinReward = 15; // Completing book sections awards +15 carrot coins!
+      coinReward = 15;
     }
 
     let newCuriosity = companion.curiosity + curiosityReward;
@@ -462,7 +726,6 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
     setCompanion(updatedCompanion);
     setBooks(updatedBooks);
 
-    // Local Storage Cache
     try {
       localStorage.setItem(COMPANION_STORAGE_KEY, JSON.stringify(updatedCompanion));
       const serializable = updatedBooks.map((b) => ({ id: b.id, progress: b.progress, isFavorite: b.isFavorite }));
@@ -471,7 +734,6 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
       console.error("Local save failed for progress:", e);
     }
 
-    // Persist to Supabase if configured
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase
@@ -492,16 +754,15 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
           },
           { onConflict: "companion_id,book_id" }
         );
-        console.log("Cabbits: Upserted book progress in Supabase.");
       } catch (e) {
-        console.error("Database upsert failed for book progress:", e);
+        console.error("Database upsert failed for progress:", e);
       }
     }
   };
 
   const feedCabbit = async () => {
     if (!companion) return;
-    if (companion.carrotCoins < 5) return; // Need at least 5 coins
+    if (companion.carrotCoins < 5) return;
 
     const newCoins = companion.carrotCoins - 5;
     let newCuriosity = companion.curiosity + 5;
@@ -523,14 +784,12 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
 
     setCompanion(updatedCompanion);
 
-    // Local Storage Cache
     try {
       localStorage.setItem(COMPANION_STORAGE_KEY, JSON.stringify(updatedCompanion));
     } catch (e) {
       console.error("Local save failed for feed:", e);
     }
 
-    // Persist to Supabase if configured
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase
@@ -543,7 +802,6 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
             cabbit_location: "rug",
           })
           .eq("id", companion.id);
-        console.log("Cabbits: Saved fed status in Supabase.");
       } catch (e) {
         console.error("Database update failed for feed:", e);
       }
@@ -565,14 +823,12 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
 
     setCompanion(updatedCompanion);
 
-    // Local Storage Cache
     try {
       localStorage.setItem(COMPANION_STORAGE_KEY, JSON.stringify(updatedCompanion));
     } catch (e) {
-      console.error("Local save failed for sleep toggle:", e);
+      console.error("Local save failed for sleep:", e);
     }
 
-    // Persist to Supabase if configured
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase
@@ -582,9 +838,8 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
             cabbit_location: nextLocation,
           })
           .eq("id", companion.id);
-        console.log("Cabbits: Saved sleep toggle in Supabase.");
       } catch (e) {
-        console.error("Database update failed for sleep toggle:", e);
+        console.error("Database update failed for sleep:", e);
       }
     }
   };
@@ -599,14 +854,12 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
 
     setCompanion(updatedCompanion);
 
-    // Local Storage Cache
     try {
       localStorage.setItem(COMPANION_STORAGE_KEY, JSON.stringify(updatedCompanion));
     } catch (e) {
-      console.error("Local save failed for coins add:", e);
+      console.error("Local save failed for coins:", e);
     }
 
-    // Persist to Supabase if configured
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase
@@ -616,7 +869,7 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
           })
           .eq("id", companion.id);
       } catch (e) {
-        console.error("Database update failed for coins add:", e);
+        console.error("Database update failed for coins:", e);
       }
     }
   };
@@ -627,18 +880,26 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
     setIsQuestCompleted(false);
     setMemories([]);
     setBooks([]);
+    setDraftObjects([]);
+    setActiveItems(ITEMS);
+    setActiveQuests(QUESTS);
+    setActiveLocations(LOCATIONS);
 
     try {
       localStorage.removeItem(COMPANION_STORAGE_KEY);
       localStorage.removeItem(QUEST_STORAGE_KEY);
       localStorage.removeItem(MEMORIES_STORAGE_KEY);
       localStorage.removeItem(BOOKS_STATE_STORAGE_KEY);
+      localStorage.removeItem("cabbits_drafts_v1");
+      localStorage.removeItem("cabbits_approved_items_v1");
+      localStorage.removeItem("cabbits_approved_quests_v1");
+      localStorage.removeItem("cabbits_approved_locations_v1");
     } catch (error) {
       console.error("Local reset failed:", error);
     }
 
     if (isSupabaseConfigured && supabase && prevCompanionId) {
-      console.log(`Cabbits: Session companion '${prevCompanionId}' reference cleared locally.`);
+      console.log(`Cabbits: Session companion '${prevCompanionId}' reference cleared.`);
     }
   };
 
@@ -651,6 +912,10 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
         isUsingSupabase: isSupabaseConfigured,
         memories,
         books,
+        items: activeItems,
+        quests: activeQuests,
+        locations: activeLocations,
+        draftObjects,
         createCompanion,
         completeQuest,
         resetCompanion,
@@ -659,6 +924,8 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
         feedCabbit,
         toggleSleep,
         addCoins,
+        approveDraftObject,
+        discardDraftObject,
       }}
     >
       {children}
