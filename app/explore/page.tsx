@@ -71,9 +71,9 @@ const poiPositions: Record<string, { top: string; left: string }[]> = {
     { top: "58%", left: "45%" },
   ],
   library: [
-    { top: "40%", left: "25%" },
-    { top: "30%", left: "65%" },
-    { top: "60%", left: "50%" },
+    { top: "75%", left: "28%" }, // Study Desk (notebooks)
+    { top: "82%", left: "72%" }, // Reading Rug (quill table)
+    { top: "28%", left: "80%" }, // Round Window (circular window)
   ],
 };
 
