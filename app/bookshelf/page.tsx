@@ -636,7 +636,7 @@ export function BookshelfContent({
               </button>
               <button
                 onClick={handleNextPage}
-                className="px-7 py-2.5 text-xs text-white bg-black hover:bg-neutral-900 cursor-pointer chunky-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
+                className="px-7 py-2.5 text-xs !text-white !bg-black hover:!bg-neutral-900 cursor-pointer chunky-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
               >
                 {activeReading.currentPage === (BOOK_PAGES[activeReading.book.id] || []).length - 1 ? "Finish Story 🎉" : "Next Page →"}
               </button>
@@ -720,7 +720,7 @@ export function BookshelfContent({
             <div className="flex flex-col gap-3 items-center w-full">
               <button
                 onClick={() => setActiveReading({ book: selectedBook, currentPage: 0 })}
-                className="bg-black text-white h-[56px] px-12 chunky-button shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1"
+                className="!bg-black !text-white h-[56px] px-12 chunky-button shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1"
               >
                 Begin Reading →
               </button>
@@ -922,7 +922,7 @@ export function BookshelfContent({
           {/* Back to library button */}
           <button
             onClick={() => setCompletedBook(null)}
-            className="w-full bg-black text-white text-xs py-3.5 chunky-button shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+            className="w-full !bg-black !text-white text-xs py-3.5 chunky-button shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
           >
             Back to Bookshelf
           </button>
