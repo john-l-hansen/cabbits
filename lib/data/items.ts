@@ -3,7 +3,7 @@ export interface Item {
   name: string;
   description: string;
   icon: string; // Emoji representing the item
-  type: "consumable" | "collectible";
+  type: "consumable" | "collectible" | "equipment";
   locationOrigin: string;
   image?: string; // Image asset path
 }
@@ -86,5 +86,53 @@ export const ITEMS: Record<string, Item> = {
     icon: "🌰",
     type: "collectible",
     locationOrigin: "Oak Forest",
+  },
+  wooden_sword: {
+    id: "wooden_sword",
+    name: "Wooden Sword",
+    description: "A sturdy wooden practice sword for aspiring adventurers.",
+    icon: "🗡️",
+    type: "equipment",
+    locationOrigin: "Training Grounds",
+  },
+  adventurer_hat: {
+    id: "adventurer_hat",
+    name: "Adventurer Hat",
+    description: "A classic leather hat adorned with a green leaf.",
+    icon: "🤠",
+    type: "equipment",
+    locationOrigin: "Tailor Shop",
+  },
+  green_scarf: {
+    id: "green_scarf",
+    name: "Green Scarf",
+    description: "A cozy green scarf knitted with love.",
+    icon: "🧣",
+    type: "equipment",
+    locationOrigin: "Home",
+  },
+  explorer_pack: {
+    id: "explorer_pack",
+    name: "Explorer Pack",
+    description: "A durable leather backpack for holding all your findings.",
+    icon: "🎒",
+    type: "equipment",
+    locationOrigin: "Market",
+  },
+  leaf_charm: {
+    id: "leaf_charm",
+    name: "Leaf Charm",
+    description: "A magical charm shaped like a spring leaf.",
+    icon: "🍃",
+    type: "equipment",
+    locationOrigin: "Forest",
+  },
+  comfy_boots: {
+    id: "comfy_boots",
+    name: "Comfy Boots",
+    description: "Sturdy boots that make walking for miles a breeze.",
+    icon: "🥾",
+    type: "equipment",
+    locationOrigin: "Cobbler",
   },
 };

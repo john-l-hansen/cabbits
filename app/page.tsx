@@ -212,7 +212,8 @@ export function HomeContent({
   showPing,
 }: HomeContentProps) {
   const { companion, isLoading, quests, memories, journalEntries } = useCompanion();
-  const { weather } = useMainShell();
+  const { weather, setWeather } = useMainShell();
+  const router = useRouter();
 
   const handlePlantClick = () => {
     setIsBubbleOpen(true);
@@ -224,16 +225,6 @@ export function HomeContent({
     setBubbleText("Ah! Thank you for the water! 💧 The plant looks so happy now! 🌱");
   };
 
-  const handleWindowClick = () => {
-    setIsBubbleOpen(true);
-    if (weather === "rainy") {
-      setBubbleText("It's raining today! 🌧️ Do you like listening to the raindrops too?");
-    } else if (weather === "snowy") {
-      setBubbleText("Brr, it's snowy outside! ❄️ Do you prefer building snowmen or staying cozy inside?");
-    } else {
-      setBubbleText("What a beautiful sunny day! ☀️ Do you have a favorite outdoor game you like to play?");
-    }
-  };
 
   const handleTableClick = () => {
     setIsBubbleOpen(true);
@@ -314,6 +305,7 @@ export function HomeContent({
         }`}
       >
         <motion.div
+          key={weather}
           initial={{ filter: "blur(16px)", scale: 0.97 }}
           animate={{ filter: "blur(0px)", scale: 1 }}
           transition={{ type: "spring", stiffness: 85, damping: 16 }}
@@ -332,7 +324,13 @@ export function HomeContent({
 
           {/* Clay Bedroom Background Image (Full Bleed) */}
           <img 
-            src="/assets/cozy_room_bg.png" 
+            src={
+              weather === "rainy" ? "/assets/cozy_room_bg_rainy.png" :
+              weather === "snowy" ? "/assets/cozy_room_bg_snowy.png" :
+              weather === "night" ? "/assets/cozy_room_bg_night.png" :
+              weather === "foggy" ? "/assets/cozy_room_bg_foggy.png" :
+              "/assets/cozy_room_bg_sunny.png"
+            } 
             alt="Bedroom Background" 
             className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none z-0" 
           />
@@ -341,12 +339,28 @@ export function HomeContent({
           {/* Bed Hitbox */}
           <motion.div
             whileHover={{ scale: 1.02 }}
-            onClick={handleToggleSleep}
+            onClick={() => {
+              const cycle: ("sunny" | "rainy" | "snowy" | "night" | "foggy")[] = ["sunny", "rainy", "snowy", "night", "foggy"];
+              const remaining = cycle.filter(w => w !== weather);
+              const randomWeather = remaining[Math.floor(Math.random() * remaining.length)];
+              if (setWeather) setWeather(randomWeather);
+            }}
             className="hitbox-overlay z-20"
             style={{ left: "5.08%", top: "23.58%", width: "25.44%", height: "31.3%" }}
-            title={companion.cabbitMood === "sleeping" ? "Wake Pip" : "Put Pip to Sleep"}
+            title="Change Background"
           />
-
+          {/* Carrot Calendar Hitbox */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            onClick={() => {
+              const cycle: ("sunny" | "rainy" | "snowy" | "night" | "foggy")[] = ["sunny", "rainy", "snowy", "night", "foggy"];
+              const nextIdx = (cycle.indexOf(weather) + 1) % cycle.length;
+              if (setWeather) setWeather(cycle[nextIdx]);
+            }}
+            className="hitbox-overlay z-20"
+            style={{ left: "50.1%", top: "30.1%", width: "8.0%", height: "14.1%" }}
+            title="Calendar"
+          />
           {/* Bookshelf Hitbox */}
           <motion.div
             whileHover={{ scale: 1.02 }}
@@ -365,16 +379,26 @@ export function HomeContent({
             )}
           </motion.div>
 
-          {/* Door Hitbox */}
+          {/* Door/Closet Hitbox */}
           <motion.div
             whileHover={{ scale: 1.02 }}
             onClick={() => {
-              setIsBubbleOpen(true);
-              setBubbleText("Hmm, this wardrobe is locked for now. Perhaps we will find clothes later!");
+              router.push("/backpack");
             }}
             className="hitbox-overlay z-20"
             style={{ left: "91.8%", top: "41.77%", width: "8.2%", height: "38.81%" }}
-            title="Wardrobe"
+            title="Closet"
+          />
+
+          {/* Cabbit Portrait Hitbox */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            onClick={() => {
+              router.push("/profile");
+            }}
+            className="hitbox-overlay z-20"
+            style={{ left: "77%", top: "28%", width: "7%", height: "10%" }}
+            title="Cabbit Portrait"
           />
 
           {/* Plant Hitbox */}
@@ -389,10 +413,12 @@ export function HomeContent({
           {/* Window Hitbox */}
           <motion.div
             whileHover={{ scale: 1.02 }}
-            onClick={handleWindowClick}
+            onClick={() => {
+              router.push("/explore");
+            }}
             className="hitbox-overlay z-20"
             style={{ left: "35%", top: "5%", width: "30%", height: "25%" }}
-            title="Look Outside"
+            title="Explore"
           />
 
           {/* Table & Mug Hitbox */}

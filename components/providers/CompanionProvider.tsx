@@ -224,6 +224,12 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
                 id: dbComp.id,
                 name: dbComp.name,
                 temperament: dbComp.temperament as CompanionTemperament,
+                level: dbComp.level ?? 12,
+                xp: dbComp.xp ?? 450,
+                health: dbComp.health ?? 120,
+                learning: dbComp.learning ?? 85,
+                kindness: dbComp.kindness ?? 78,
+                energy: dbComp.energy ?? 65,
                 curiosity: dbComp.curiosity ?? 0,
                 insightsCount: dbComp.insights_count ?? 0,
                 carrotCoins: dbComp.carrot_coins ?? 128,
@@ -336,7 +342,13 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
             const interests = parsed.interests || {};
             setCompanion({
               ...parsed,
-              inventory: (parsed.inventory && parsed.inventory.length > 0) ? parsed.inventory : ["carrot", "carrot", "carrot", "apple", "apple", "mushroom", "mushroom", "fruit_basket", "milk", "juice", "feather", "lantern"],
+              level: parsed.level ?? 12,
+              xp: parsed.xp ?? 450,
+              health: parsed.health ?? 120,
+              learning: parsed.learning ?? 85,
+              kindness: parsed.kindness ?? 78,
+              energy: parsed.energy ?? 65,
+              inventory: (parsed.inventory && parsed.inventory.length > 0) ? parsed.inventory : ["carrot", "carrot", "carrot", "apple", "apple", "mushroom", "mushroom", "fruit_basket", "milk", "juice", "feather", "lantern", "wooden_sword", "adventurer_hat", "green_scarf", "explorer_pack", "leaf_charm", "comfy_boots"],
               interests: interests,
             });
 
@@ -393,13 +405,19 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
       id: compId,
       name: name.trim(),
       temperament,
+      level: 12,
+      xp: 450,
+      health: 120,
+      learning: 85,
+      kindness: 78,
+      energy: 65,
       curiosity: 0,
       insightsCount: 0,
       carrotCoins: 128,
       cabbitMood: "idle",
       cabbitLocation: "rug",
       createdAt,
-      inventory: ["carrot", "carrot", "carrot", "apple", "apple", "mushroom", "mushroom", "fruit_basket", "milk", "juice", "feather", "lantern"],
+      inventory: ["carrot", "carrot", "carrot", "apple", "apple", "mushroom", "mushroom", "fruit_basket", "milk", "juice", "feather", "lantern", "wooden_sword", "adventurer_hat", "green_scarf", "explorer_pack", "leaf_charm", "comfy_boots"],
       interests: {},
     };
 

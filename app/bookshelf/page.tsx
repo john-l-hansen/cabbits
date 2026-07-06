@@ -939,15 +939,7 @@ export default function BookshelfPage() {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [activeReading, setActiveReading] = useState<ReadingState | null>(null);
   const [activeCategory, setActiveCategory] = useState<"all" | "stories" | "guides" | "poetry" | "puzzles">("all");
-  const [entryFade, setEntryFade] = useState(true);
   const { setSidebarContent } = useMainShellSidebar();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setEntryFade(false);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     setSidebarContent(
@@ -964,22 +956,13 @@ export default function BookshelfPage() {
   }, [selectedBook, activeReading, activeCategory, setSidebarContent]);
 
   return (
-    <>
-      <BookshelfContent
-        selectedBook={selectedBook}
-        setSelectedBook={setSelectedBook}
-        activeReading={activeReading}
-        setActiveReading={setActiveReading}
-        activeCategory={activeCategory}
-        setActiveCategory={setActiveCategory}
-      />
-
-      {/* Main Content Flash/Fade-Out Entry Overlay */}
-      <div 
-        className={`absolute inset-0 bg-[#fefdf9] z-[9999] pointer-events-none transition-opacity duration-250 ${
-          entryFade ? "opacity-100" : "opacity-0"
-        }`} 
-      />
-    </>
+    <BookshelfContent
+      selectedBook={selectedBook}
+      setSelectedBook={setSelectedBook}
+      activeReading={activeReading}
+      setActiveReading={setActiveReading}
+      activeCategory={activeCategory}
+      setActiveCategory={setActiveCategory}
+    />
   );
 }

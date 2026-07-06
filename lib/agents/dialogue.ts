@@ -103,10 +103,17 @@ const PERSONALITY_GREETINGS: Record<
 // Generates dynamic greetings on Home screen
 export function getCompanionGreeting(
   companion: Companion,
-  weather: "sunny" | "rainy" | "snowy",
+  weather: "sunny" | "rainy" | "snowy" | "night" | "foggy",
   timeOfDay: "morning" | "afternoon" | "evening" | "night",
   journalEntries: JournalEntry[] = []
 ): string {
+  // Weather special greetings
+  if (weather === "night") {
+    return `It's dark outside, ${companion.name}. Shall we sit by the cozy fireplace or do some nighttime reading? 🌙`;
+  }
+  if (weather === "foggy") {
+    return `Look at all the fog outside! 🌫️ It makes the room feel extra warm and cozy, doesn't it?`;
+  }
   // 1. Sleeping state override
   if (companion.cabbitMood === "sleeping") {
     const sleepQuotes = [
@@ -168,7 +175,7 @@ export function getCompanionGreeting(
 export function getLandmarkComment(
   landmarkId: string,
   companion: Companion,
-  weather: "sunny" | "rainy" | "snowy"
+  weather: "sunny" | "rainy" | "snowy" | "night" | "foggy"
 ): string {
   const name = companion.name;
   

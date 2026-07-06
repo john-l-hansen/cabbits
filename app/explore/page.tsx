@@ -305,7 +305,7 @@ export function ExploreContent({ selectedLoc, setSelectedLoc, activeQuestId, set
             className="absolute inset-0 select-none pointer-events-none z-0 size-full"
           >
             <img 
-              src="http://localhost:3845/assets/3435e082152993b22065966888c0506847872980.png" 
+              src="/assets/cabbits_overhead_map.png" 
               alt="Valley Map" 
               className="w-full h-full object-cover opacity-95" 
             />

@@ -7,12 +7,14 @@ import { useCompanion } from "@/components/providers/CompanionProvider";
 import { CabbitVectorPreview, parseKeepsake } from "@/components/companion/CabbitVectorPreview";
 import { Item } from "@/types";
 
-type WeatherType = "rainy" | "sunny" | "snowy";
+type WeatherType = "rainy" | "sunny" | "snowy" | "night" | "foggy";
 
 const WEATHER_DETAILS: Record<WeatherType, { label: string; icon: string; temp: string }> = {
   rainy: { label: "Rainy", icon: "🌧️", temp: "18°C" },
   sunny: { label: "Sunny", icon: "☀️", temp: "24°C" },
   snowy: { label: "Snowy", icon: "❄️", temp: "-1°C" },
+  night: { label: "Night", icon: "🌙", temp: "12°C" },
+  foggy: { label: "Foggy", icon: "🌫️", temp: "15°C" },
 };
 
 const MOCK_LETTERS = [
@@ -51,6 +53,7 @@ const MOCK_LETTERS = [
 interface MainShellContextType {
   weather: WeatherType;
   timeStr: string;
+  setWeather: (w: WeatherType) => void;
 }
 
 const MainShellContext = createContext<MainShellContextType | null>(null);
@@ -209,9 +212,9 @@ export function MainShell({ children }: { children: React.ReactNode }) {
   }
 
   const handleWeatherClick = () => {
-    if (weather === "rainy") setWeather("sunny");
-    else if (weather === "sunny") setWeather("snowy");
-    else setWeather("rainy");
+    const cycle: WeatherType[] = ["sunny", "rainy", "snowy", "night", "foggy"];
+    const nextIdx = (cycle.indexOf(weather) + 1) % cycle.length;
+    setWeather(cycle[nextIdx]);
   };
 
   const handleResetSession = () => {
@@ -262,7 +265,7 @@ export function MainShell({ children }: { children: React.ReactNode }) {
   const userName = user ? (user.username || user.email.split("@")[0]) : "Alex Morgan";
 
   return (
-    <MainShellContext.Provider value={{ weather, timeStr }}>
+    <MainShellContext.Provider value={{ weather, timeStr, setWeather }}>
       <main className="h-screen w-screen relative overflow-hidden bg-[var(--neutral-0)] font-sans select-none flex flex-col">
         
         {/* TOP BAR */}
@@ -466,144 +469,7 @@ export function MainShell({ children }: { children: React.ReactNode }) {
                       </div>
                     )}
 
-                    {/* DRAWER 2: COMPANION PROFILE */}
-                    {activeSheet === "profile" && (
-                      <div className="space-y-4">
-                        <div className="flex gap-2 p-1 bg-[var(--neutral-50)] rounded-full border border-[var(--neutral-300)]">
-                          <button
-                            onClick={() => setProfileSubTab("info")}
-                            className={`flex-1 py-1 rounded-full font-bold text-[10px] uppercase cursor-pointer transition-all ${
-                              profileSubTab === "info" ? "bg-[var(--neutral-1000)] text-white shadow-3xs" : "text-[var(--neutral-500)] hover:text-[var(--neutral-900)]"
-                            }`}
-                          >
-                            Stats & Badges
-                          </button>
-                          <button
-                            onClick={() => setProfileSubTab("dreams")}
-                            className={`flex-1 py-1 rounded-full font-bold text-[10px] uppercase cursor-pointer transition-all flex items-center justify-center gap-1.5 ${
-                              profileSubTab === "dreams" ? "bg-[var(--neutral-1000)] text-white shadow-3xs" : "text-[var(--neutral-500)] hover:text-[var(--neutral-900)]"
-                            }`}
-                          >
-                            <span>Dream Log</span>
-                            {draftObjects.length > 0 && (
-                              <span className="bg-amber-500 text-white rounded-full text-[9px] h-4 min-w-4 px-1 flex items-center justify-center font-bold">
-                                {draftObjects.length}
-                              </span>
-                            )}
-                          </button>
-                        </div>
 
-                        {profileSubTab === "info" ? (
-                          <div className="space-y-4">
-                            <div className="text-center space-y-1.5">
-                              <CabbitVectorPreview
-                                earStyle={customs.earStyle}
-                                eyeStyle={customs.eyeStyle}
-                                furColor={customs.furColor}
-                                keepsakeText={customs.keepsake}
-                              />
-                              <h4 className="text-lg font-black text-[var(--neutral-900)] leading-tight">{companion.name}</h4>
-                              <p className="text-[10px] font-bold text-[var(--neutral-500)] uppercase tracking-wide">
-                                Temperament: {companion.temperament}
-                              </p>
-                            </div>
-
-                            <div className="border border-[var(--neutral-200)] rounded-2xl p-4 bg-[var(--neutral-50)] space-y-2 text-left">
-                              <span className="text-[9px] font-black uppercase tracking-wider text-[var(--neutral-500)]">Companion Status</span>
-                              <div className="text-xxs font-bold text-[var(--neutral-500)] space-y-1.5 uppercase tracking-wide">
-                                <div className="flex justify-between">
-                                  <span>Hunger</span>
-                                  <span className="font-extrabold text-[var(--neutral-900)]">{getHungerStatus()}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>Mood</span>
-                                  <span className="font-extrabold text-[var(--neutral-900)]">{getMoodStatus()}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>Energy</span>
-                                  <span className="font-extrabold text-[var(--neutral-900)]">{getEnergyStatus()}</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="border border-[var(--neutral-200)] rounded-2xl p-4 bg-[var(--neutral-50)] space-y-3">
-                              <span className="text-[9px] font-black uppercase tracking-wider text-[var(--neutral-500)]">Milestone stats</span>
-                              <div className="grid grid-cols-2 gap-3 text-center">
-                                <div className="p-2 border border-[var(--neutral-300)] bg-[var(--neutral-0)] rounded-xl">
-                                  <span className="text-lg">✨</span>
-                                  <h6 className="text-[10px] font-bold text-[var(--neutral-500)] uppercase mt-0.5">Insights</h6>
-                                  <p className="text-sm font-black text-[var(--neutral-900)]">{companion.insightsCount}</p>
-                                </div>
-                                <div className="p-2 border border-[var(--neutral-300)] bg-[var(--neutral-0)] rounded-xl">
-                                  <span className="text-lg">🎒</span>
-                                  <h6 className="text-[10px] font-bold text-[var(--neutral-500)] uppercase mt-0.5">Items Owned</h6>
-                                  <p className="text-sm font-black text-[var(--neutral-900)]">{companion.inventory?.length || 0}</p>
-                                </div>
-                              </div>
-                            </div>
-
-                            {customs.keepsake && (
-                              <div className="border border-[var(--neutral-200)] rounded-2xl p-4 bg-[var(--neutral-50)] space-y-2 text-left">
-                                <span className="text-[9px] font-black uppercase tracking-wider text-[var(--neutral-500)]">Equipped Keepsake</span>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-2xl select-none">{parseKeepsake(customs.keepsake).emoji}</span>
-                                  <div>
-                                    <h5 className="text-xs font-bold text-[var(--neutral-900)]">{parseKeepsake(customs.keepsake).title}</h5>
-                                    <span className="text-[8px] font-bold uppercase tracking-widest text-[var(--neutral-400)]">
-                                      {parseKeepsake(customs.keepsake).slot}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="space-y-4">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-[var(--neutral-500)]">Pip's Dream Log Proposals</span>
-                            <p className="text-[11px] leading-relaxed text-[var(--neutral-500)]">
-                              Review drafts proposed by {companion.name} after completed observations.
-                            </p>
-                            {draftObjects.length === 0 ? (
-                              <div className="p-8 text-center bg-[var(--neutral-50)] border border-[var(--neutral-200)] rounded-2xl">
-                                <span className="text-3xl select-none">💭</span>
-                                <p className="text-xs text-[var(--neutral-500)] italic mt-2">
-                                  No draft items proposed yet. Complete landmark quests to trigger dreams!
-                                </p>
-                              </div>
-                            ) : (
-                              <div className="space-y-3 max-h-[350px] overflow-y-auto">
-                                {draftObjects.map((draft) => (
-                                  <div key={draft.id} className="p-3 bg-[var(--neutral-50)] border border-[var(--neutral-300)] rounded-2xl space-y-3 relative text-left">
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-xs font-bold uppercase tracking-wider text-[var(--neutral-500)]">
-                                        Type: {draft.type}
-                                      </span>
-                                      <span className="bg-amber-100 text-amber-700 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                                        PROPOSED
-                                      </span>
-                                    </div>
-                                    <div>
-                                      <h5 className="text-xs font-black text-[var(--neutral-900)] uppercase">{draft.data.title || draft.objectId}</h5>
-                                      <p className="text-[11px] text-[var(--neutral-700)] mt-1 leading-normal">
-                                        {draft.data.description || "Draft details pending review."}
-                                      </p>
-                                    </div>
-                                    <div className="flex gap-2 border-t border-[var(--neutral-200)] pt-2.5">
-                                      <button onClick={() => approveDraftObject(draft.objectId)} className="flex-1 rounded-full bg-[var(--neutral-1000)] py-1.5 text-center text-[10px] font-black text-white hover:bg-[var(--neutral-900)] cursor-pointer">
-                                        Approve & Add
-                                      </button>
-                                      <button onClick={() => discardDraftObject(draft.objectId)} className="flex-1 rounded-full border border-[var(--neutral-300)] bg-transparent py-1.5 text-center text-[10px] font-black text-[var(--neutral-500)] hover:bg-[var(--neutral-50)] cursor-pointer">
-                                        Discard
-                                      </button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -752,17 +618,17 @@ export function MainShell({ children }: { children: React.ReactNode }) {
           </Link>
 
           {/* Button 5: Profile */}
-          <button 
-            onClick={() => setActiveSheet(activeSheet === "profile" ? "none" : "profile")} 
+          <Link 
+            href="/profile" 
             className={`flex flex-col items-center justify-center w-[90px] h-[90px] rounded-full border-4 border-black transition-all cursor-pointer select-none ${
-              activeSheet === "profile" 
+              pathname === "/profile" && activeSheet === "none" 
                 ? "bg-black text-white shadow-[1px_1px_0px_black] translate-x-[3px] translate-y-[3px]" 
                 : "bg-[#f7f3e6] text-[#181818] shadow-[4px_4px_0px_black] hover:scale-105 active:translate-x-[3px] active:translate-y-[3px] active:shadow-[1px_1px_0px_black]"
             }`}
           >
             <span className="text-2xl select-none">🐰</span>
             <span className="text-[11px] font-extrabold uppercase mt-1 tracking-tight">Profile</span>
-          </button>
+          </Link>
         </div>
       </main>
     </MainShellContext.Provider>

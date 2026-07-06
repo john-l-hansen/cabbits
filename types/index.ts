@@ -7,6 +7,12 @@ export type Companion = {
   id: string;
   name: string;
   temperament: CompanionTemperament;
+  level: number;
+  xp: number;
+  health: number;
+  learning: number;
+  kindness: number;
+  energy: number;
   curiosity: number;
   insightsCount: number;
   carrotCoins: number;
@@ -48,7 +54,7 @@ export type Item = {
   name: string;
   description: string;
   icon: string;
-  type: "consumable" | "collectible";
+  type: "consumable" | "collectible" | "equipment";
   locationOrigin: string;
   image?: string;
 };
