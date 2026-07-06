@@ -269,6 +269,9 @@ export function ExploreContent({ selectedLoc, setSelectedLoc, activeQuestId, set
       forest_oak: ["Examine smooth river pebbles", "Sort stones by composition", "Collect river bed samples"],
       forest_perch: ["Inspect wooden walkway planks", "Test handrail bridge stability", "Calculate bridge truss load"],
       forest_undergrowth: ["Observe water current flow speed", "Track floating leaves", "Check for river obstructions"],
+      burrow_entrance: ["Inspect piano keys", "Tune acoustic guitar strings", "Adjust warm alcove string lights"],
+      burrow_lichen: ["Clean dust off shelves", "Label plant species tags", "Arrange potted ferns and books"],
+      burrow_tunnels: ["Check retro TV composite cables", "Plug in game console", "Tune antenna signal channels"],
     };
     return maps[qId] || ["Explore the landmark area", "Log your observations in the journal", "Return to your companion"];
   };

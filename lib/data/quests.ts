@@ -292,10 +292,10 @@ const QUEST_TEMPLATES: Record<string, (vars: { count: number; name: string }) =>
   }),
   burrow_entrance: (vars) => ({
     id: "burrow_entrance",
-    title: "Burrow Door Alignment",
-    description: `The pulley system on the main entry door is unbalanced by ${vars.count} grams. Align the weights.`,
+    title: "Tune the Alcove Instruments",
+    description: `Help Pip tune the acoustic guitar and piano in the warm lantern alcove, adjusting ${vars.count} loose string pegs.`,
     placeholder: "Select your approach below to begin.",
-    initialSaying: `“The door creaks and shifts when we open it. Let's fix it, ${vars.name}!”`,
+    initialSaying: `“The acoustic instruments in this cozy music nook sound a bit out of tune. Let's fix them, ${vars.name}!”`,
     isLocked: false,
     unlockCondition: "",
     locationId: "burrow",
@@ -305,29 +305,29 @@ const QUEST_TEMPLATES: Record<string, (vars: { count: number; name: string }) =>
       {
         id: "logic",
         type: "logical",
-        text: "Balance Counterweight Pulleys",
-        description: `Add or subtract gravel weights to balance the pulleys by exactly ${vars.count} grams.`
+        text: "Calculate Frequency Harmonics",
+        description: "Measure vibration pitches and calculate the correct tension frequencies for each string."
       },
       {
         id: "verbal",
         type: "verbal",
-        text: "Inscribe Cozy Greetings",
-        description: "Paint a warm, cheerful welcome sign over the doorway to put visitors at ease."
+        text: "Sing a Cozy Duet",
+        description: "Lead a warm singing warm-up to guide Pip as he matches the pitch of the keys."
       },
       {
         id: "practical",
         type: "practical",
-        text: "Lubricate Wooden Hinges",
-        description: "Apply a layer of linseed oil to the friction joints to completely eliminate the creaking."
+        text: "Wind the Pegs Manually",
+        description: "Use the peg-winder tool to carefully tighten the steel strings until they click into standard tuning."
       }
     ]
   }),
   burrow_lichen: (vars) => ({
     id: "burrow_lichen",
-    title: "Organize Lichen Jars",
-    description: `A collection of ${vars.count} jars containing glowing lichen needs sorting on the pantry shelf.`,
+    title: "Organize Lichen & Potted Plants",
+    description: `Help Pip organize ${vars.count} books and green potted plants on the high wooden storage shelf.`,
     placeholder: "Select your approach below to begin.",
-    initialSaying: `“The jars are all jumbled up. Let's make the shelf look neat, ${vars.name}!”`,
+    initialSaying: `“Our shelf has books and plants all mixed up. Let's make it look clean and cozy, ${vars.name}!”`,
     isLocked: false,
     unlockCondition: "",
     locationId: "burrow",
@@ -337,29 +337,29 @@ const QUEST_TEMPLATES: Record<string, (vars: { count: number; name: string }) =>
       {
         id: "logic",
         type: "logical",
-        text: "Sort by Light Intensity",
-        description: `Arrange the ${vars.count} jars in a perfect linear gradient from dimmest green to brightest gold.`
+        text: "Arrange by Height and Subject",
+        description: "Categorize books by subject and arrange the plants from tallest to shortest."
       },
       {
         id: "verbal",
         type: "verbal",
-        text: "Label Harvesting Details",
-        description: "Label each jar carefully with its harvesting location and name of the gatherer."
+        text: "Label the Plant Species",
+        description: "Write neat calligraphy tags identifying the different forest lichen and moss types."
       },
       {
         id: "practical",
         type: "practical",
-        text: "Build Wooden Spacers",
-        description: "Carve custom wooden slats to slot between the jars so they don't roll off the shelf."
+        text: "Dust Shelves and Water Plants",
+        description: "Use a soft feather duster to clean the wood and water the small potted ferns."
       }
     ]
   }),
   burrow_tunnels: (vars) => ({
     id: "burrow_tunnels",
-    title: "Reinforce Tunnel Walls",
-    description: `A dry sandy patch along the hallway has shifted by ${vars.count} millimeters. Reinforce the wall.`,
+    title: "Set Up the Living Room TV",
+    description: `The retro television screen displays static. Configure the antenna and console wiring to display a game running at ${vars.count} frames per second.`,
     placeholder: "Select your approach below to begin.",
-    initialSaying: `“Let's make sure our tunnels are solid and safe dug beneath the roots, ${vars.name}!”`,
+    initialSaying: `“Let's get this gaming setup running on our cozy retro TV, ${vars.name}!”`,
     isLocked: false,
     unlockCondition: "",
     locationId: "burrow",
@@ -369,20 +369,20 @@ const QUEST_TEMPLATES: Record<string, (vars: { count: number; name: string }) =>
       {
         id: "logic",
         type: "logical",
-        text: "Calculate Pressure Angles",
-        description: "Compute the correct angle for placing cedar support beams to bear the overhead load."
+        text: "Trace Console Signal Flow",
+        description: "Map the input/output ports and calculate the correct signal frequency channels."
       },
       {
         id: "verbal",
         type: "verbal",
-        text: "Sculpt Clay Wall Reliefs",
-        description: "Sculpt friendly Cabbits faces and leaf carvings into the damp clay walls to make them cozy."
+        text: "Recount retro Game Lore",
+        description: "Tell Pip a story about the classic arcade games played by Cabbits in the old times."
       },
       {
         id: "practical",
         type: "practical",
-        text: "Pack Structural Clay",
-        description: "Mix dry dirt with river water to create a thick clay plaster and pack it into structural gaps."
+        text: "Adjust the Wire Connections",
+        description: "Plug the color-coded composite cables into the correct TV jacks and adjust the rabbit-ear antenna."
       }
     ]
   }),
