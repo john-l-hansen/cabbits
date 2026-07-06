@@ -46,7 +46,7 @@ const locationBackgrounds: Record<string, string> = {
   pond: "/assets/map_pond_bg.png",
   meadow: "/assets/map_oak_forest_bg.png",
   forest: "/assets/map_little_bridge_bg.png",
-  library: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+  library: "/assets/map_secret_library_bg.png",
 };
 
 const poiPositions: Record<string, { top: string; left: string }[]> = {
