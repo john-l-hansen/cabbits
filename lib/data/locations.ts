@@ -20,7 +20,7 @@ export const LOCATIONS: Record<string, Location> = {
   },
   meadow: {
     id: "meadow",
-    name: "Green Meadow",
+    name: "Oak Forest",
     description: "A sprawling field of tall grasses and bright wildflowers. Home to hummingbirds and sweet clover.",
     pinEmoji: "🌸",
     top: "19.0%",
@@ -29,7 +29,7 @@ export const LOCATIONS: Record<string, Location> = {
   },
   forest: {
     id: "forest",
-    name: "Oak Forest",
+    name: "Little Bridge",
     description: "A dense, mystical woodland where the ancient oaks whisper secrets to those who listen closely.",
     pinEmoji: "🌳",
     top: "52.0%",
