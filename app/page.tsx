@@ -215,6 +215,56 @@ export function HomeContent({
   const { weather, setWeather } = useMainShell();
   const router = useRouter();
 
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState(0);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const completed = localStorage.getItem("cabbits_onboarding_completed");
+      if (!completed) {
+        setShowOnboarding(true);
+      }
+    }
+  }, []);
+
+  const handleFinishOnboarding = () => {
+    localStorage.setItem("cabbits_onboarding_completed", "true");
+    setShowOnboarding(false);
+  };
+
+  const onboardingSlides = [
+    {
+      title: "Welcome Explorer! 🌟",
+      emoji: "🐰",
+      description: `Welcome to Cabbits—a cozy space where logic meets life. You've just met your companion, ${companion?.name || "Pip"}! Let's take a quick look at how to grow together.`,
+      tip: "Every action you take constructs a diary of memories for your cabbit."
+    },
+    {
+      title: "1. The Bedroom Base 🏡",
+      emoji: "🪴",
+      description: "This room is your base of operations. Tap Pip to check stats, water the desk plant for cozy ambient sounds, sip warm tea for inspiring literature quotes, or click the Bed to let Pip rest.",
+      tip: "Tip: Sleep mode can be instantly canceled by pressing the ESC key!"
+    },
+    {
+      title: "2. Explore the Valley 🗺️",
+      emoji: "🌍",
+      description: "Click the 'Explore' tab in the navigation bar to open the Valley Map. Visit landmarks like the Little Bridge, Pip's Burrow, or the Secret Library to complete dynamic quests.",
+      tip: "Quests challenge Pip's Logical, Verbal, and Practical abilities."
+    },
+    {
+      title: "3. Bookshelf Stories 📖",
+      emoji: "📚",
+      description: "Go to the 'Bookshelf' to read logic-infused stories. Answer comprehension quiz questions at the end of stories to earn Carrot Coins and level up Pip!",
+      tip: "Feed Pip carrots from the bowl on the floor to maintain energy!"
+    },
+    {
+      title: "4. Your Backpack 🎒",
+      emoji: "🎒",
+      description: "The 'Inventory' page holds your companion's inventory. Here you can equip unique keepsakes (hats, collars, accessories) and inspect custom items crafted by NPCs!",
+      tip: "Your keepsakes sync with your companion's rendering in 2D."
+    }
+  ];
+
   const handlePlantClick = () => {
     setIsBubbleOpen(true);
     if (companion && companion.cabbitMood === "sleeping") {
@@ -586,6 +636,96 @@ export function HomeContent({
               >
                 Hooray!
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Onboarding Tour Overlay */}
+        {showOnboarding && companion && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99998] flex items-center justify-center p-4">
+            <div className="w-full max-w-[480px] bg-[#fdfaf2] border-4 border-black rounded-[2rem] p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col items-center select-none relative animate-bounce-in">
+              
+              {/* Skip Tour Button */}
+              <button 
+                onClick={handleFinishOnboarding}
+                className="absolute top-4 right-6 text-xs font-bold text-neutral-400 hover:text-black transition-colors cursor-pointer"
+              >
+                Skip Tour
+              </button>
+
+              {/* Title & Badge */}
+              <div className="mb-4 mt-2">
+                <div className="border-2 border-black bg-amber-50 px-4 py-1.5 rounded-full inline-block font-extrabold uppercase tracking-widest text-[#181818] text-xs">
+                  Cabbits Guide
+                </div>
+                <h3 className="text-xl font-black text-black uppercase tracking-tight mt-3">
+                  {onboardingSlides[onboardingStep].title}
+                </h3>
+              </div>
+
+              {/* Emoji Representation */}
+              <div className="my-3 w-32 h-32 flex flex-col items-center justify-center border-4 border-black rounded-full bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <span className="text-5xl select-none">
+                  {onboardingSlides[onboardingStep].emoji}
+                </span>
+              </div>
+
+              {/* Description */}
+              <p className="text-xs leading-relaxed text-neutral-700 min-h-[72px] max-w-[380px] px-2 font-medium">
+                {onboardingSlides[onboardingStep].description}
+              </p>
+
+              {/* Tips panel */}
+              <div className="w-full rounded-xl border-2 border-black bg-[#fefdf9] p-3 text-left shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] mt-3">
+                <span className="text-[8px] font-black text-neutral-400 uppercase tracking-wider block">Companion Tip:</span>
+                <p className="text-[10px] text-neutral-600 font-semibold leading-relaxed mt-0.5">
+                  {onboardingSlides[onboardingStep].tip}
+                </p>
+              </div>
+
+              {/* Indicator Dots */}
+              <div className="flex gap-2 justify-center my-5">
+                {onboardingSlides.map((_, idx) => (
+                  <button 
+                    key={idx}
+                    onClick={() => setOnboardingStep(idx)}
+                    className={`w-2.5 h-2.5 rounded-full border border-black transition-all ${
+                      onboardingStep === idx ? "bg-black scale-110" : "bg-neutral-200"
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {/* Navigation Controls */}
+              <div className="flex gap-3 w-full">
+                {onboardingStep > 0 ? (
+                  <button
+                    onClick={() => setOnboardingStep(prev => prev - 1)}
+                    className="flex-1 py-3 text-center font-black text-black bg-white hover:bg-neutral-50 transition-all cursor-pointer rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 text-xs uppercase tracking-wider"
+                  >
+                    Back
+                  </button>
+                ) : (
+                  <div className="flex-1" />
+                )}
+
+                {onboardingStep < onboardingSlides.length - 1 ? (
+                  <button
+                    onClick={() => setOnboardingStep(prev => prev + 1)}
+                    className="flex-1 py-3 text-center font-black text-white bg-black hover:bg-neutral-900 transition-all cursor-pointer rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 text-xs uppercase tracking-wider !bg-black !text-white"
+                  >
+                    Next →
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleFinishOnboarding}
+                    className="flex-1 py-3 text-center font-black text-white bg-emerald-600 hover:bg-emerald-700 transition-all cursor-pointer rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 text-xs uppercase tracking-wider !bg-emerald-600 !text-white"
+                  >
+                    Start Exploring! ✦
+                  </button>
+                )}
+              </div>
+
             </div>
           </div>
         )}
