@@ -4,8 +4,57 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCompanion } from "@/components/providers/CompanionProvider";
 import { getCompanionGreeting } from "@/lib/agents/dialogue";
-import { MainShell, useMainShell } from "@/components/layout/MainShell";
+import { useMainShell, useMainShellSidebar } from "@/components/layout/MainShell";
 import { motion, AnimatePresence } from "framer-motion";
+
+const LITERATURE_QUOTES = [
+  { quote: "There is always light, if only we're brave enough to see it.", author: "Amanda Gorman" },
+  { quote: "I would rather sit on a pumpkin and have it all to myself than be crowded on a velvet cushion.", author: "Henry David Thoreau" },
+  { quote: "The power of finding beauty in the humblest things makes home happy and life lovely.", author: "Louisa May Alcott" },
+  { quote: "Hope is the thing with feathers that perches in the soul.", author: "Emily Dickinson" },
+  { quote: "The sun is but a morning star.", author: "Henry David Thoreau" }
+];
+
+const playWaterSound = () => {
+  if (typeof window === "undefined") return;
+  const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+  if (!AudioContext) return;
+  try {
+    const ctx = new AudioContext();
+    const bufferSize = ctx.sampleRate * 1.5;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let lastOut = 0.0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      data[i] = lastOut * 0.9 + white * 0.1;
+      lastOut = data[i];
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(800, ctx.currentTime);
+    filter.Q.setValueAtTime(2.0, ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(1500, ctx.currentTime + 0.5);
+    filter.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 1.2);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.001, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.4);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    noise.start();
+    noise.stop(ctx.currentTime + 1.5);
+  } catch (e) {
+    console.error("Audio error:", e);
+  }
+};
 
 interface TypedSpeechBubbleProps {
   text: string;
@@ -32,107 +81,96 @@ function TypedSpeechBubble({ text, name, onClose }: TypedSpeechBubbleProps) {
 
   return (
     <motion.div
-      initial={{ scale: 0, y: 30, opacity: 0 }}
-      animate={{ scale: 1, y: 0, opacity: 1 }}
-      exit={{ scale: 0, y: 30, opacity: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      className="absolute bottom-28 bg-white border-4 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-[16px] z-50 text-left select-none w-64"
+      initial={{ y: -30, opacity: 0, scale: 0.85 }}
+      animate={{ y: 0, opacity: 1, scale: 1 }}
+      exit={{ y: -30, opacity: 0, scale: 0.85 }}
+      transition={{ type: "spring", stiffness: 420, damping: 18 }}
+      className="absolute top-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[580px] bg-[#f7f3e6] px-[24px] py-[20px] rounded-[12px] shadow-lg border border-black/5 z-50 flex gap-[12px] items-center justify-between pointer-events-auto select-none"
       onClick={(e) => e.stopPropagation()}
     >
-      <span className="font-mono text-[9px] font-black uppercase tracking-wider text-[var(--neutral-400)] block">
-        {name}
-      </span>
-      <p className="text-xs font-semibold text-black leading-normal mt-1 italic">
-        "{typedText}"
-      </p>
+      <div className="flex flex-col gap-[2px] items-start text-left flex-1">
+        <p className="font-['Nunito',sans-serif] font-black text-[#181818] text-[28px] leading-[1.25]">
+          {name}:
+        </p>
+        <p className="font-normal text-[#474747] tracking-[0.02px] text-[20px] leading-[1.65]">
+          {typedText}
+        </p>
+      </div>
+      
+      {/* Avatar Container - exactly size-[100px] per figma spec, centered zoomed graphic */}
+      <div className="size-[100px] rounded-[999px] border border-black/10 bg-[#eae4d3] flex items-center justify-center overflow-hidden shrink-0 relative">
+        <img 
+          src="/assets/cabbit-idle-01.png" 
+          alt={name} 
+          className="w-full h-full object-contain scale-[1.95] origin-center" 
+        />
+      </div>
 
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-2.5 right-2.5 text-xxs font-extrabold text-[var(--neutral-400)] hover:text-black cursor-pointer bg-transparent border-none outline-none"
+        className="absolute top-2.5 right-3 text-xs font-extrabold text-[#999999] hover:text-black cursor-pointer bg-transparent border-none outline-none"
       >
         ✕
       </button>
-
-      {/* Speech bubble tail pointer pointing down */}
-      <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-black" />
-      <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-[3px] w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-white" />
     </motion.div>
   );
 }
 
-interface HomeSidebarProps {
-  handleToggleSleep: () => Promise<void>;
-  handleBowlClick: () => Promise<void>;
-  handleBookshelfClick: () => void;
-  handleCabbitClick: () => void;
-}
+interface HomeSidebarProps {}
 
-function HomeSidebar({ handleToggleSleep, handleBowlClick, handleBookshelfClick, handleCabbitClick }: HomeSidebarProps) {
+function HomeSidebar() {
   const { companion } = useCompanion();
 
   if (!companion) return null;
 
+  const getEnergySegments = () => {
+    if (companion.cabbitMood === "sleeping") return 4;
+    if (companion.cabbitMood === "hungry") return 1;
+    return 3;
+  };
+
+  const getHungerSegments = () => {
+    if (companion.cabbitMood === "hungry") return 2;
+    return 4;
+  };
+
+  const getMoodSegments = () => {
+    if (companion.cabbitMood === "sleeping") return 2;
+    if (companion.cabbitMood === "happy") return 5;
+    return 4;
+  };
+
+  const getDots = (filled: number) => "●".repeat(filled) + "○".repeat(5 - filled);
+  const getStars = (filled: number) => "★".repeat(filled) + "☆".repeat(5 - filled);
+  const getEnergyBar = (filled: number) => "█".repeat(filled) + "░".repeat(4 - filled);
+
   return (
-    <div className="space-y-4 text-left">
-      <span className="text-[10px] font-black uppercase tracking-wider text-[var(--neutral-500)] block">Points of Interest</span>
-      <div className="flex flex-col gap-3">
-        <button
-          onClick={handleToggleSleep}
-          className="w-full text-left p-3.5 chunky-button flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2">
-            <span>🛌</span>
-            <span className="text-xs font-black">Bed</span>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9, x: -20 }}
+      animate={{ opacity: 1, scale: 1, x: 0 }}
+      transition={{ type: "spring", stiffness: 120, damping: 14, delay: 0.2 }}
+      className="space-y-6 text-left"
+    >
+      <div className="space-y-3">
+        <span className="text-[10px] font-black uppercase tracking-wider text-[var(--neutral-500)] block">
+          Home
+        </span>
+        <div className="bg-white border-2 border-black p-4 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-full border-2 border-black bg-amber-100 flex items-center justify-center text-xl select-none">
+              🐰
+            </div>
+            <h3 className="text-xl font-black text-black">{companion.name}</h3>
           </div>
-          <span className="text-[9px] font-black text-[var(--neutral-500)] uppercase">
-            {companion.cabbitMood === "sleeping" ? "Wake" : "Sleep"}
-          </span>
-        </button>
-        <button
-          onClick={handleBowlClick}
-          className="w-full text-left p-3.5 chunky-button flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2">
-            <span>🥣</span>
-            <span className="text-xs font-black">Bowl</span>
+          <div className="space-y-1.5 font-sans font-semibold text-xs text-[var(--neutral-500)]">
+            <p>Hunger {getDots(getHungerSegments())}</p>
+            <p>Mood {getStars(getMoodSegments())}</p>
+            <p>Energy {getEnergyBar(getEnergySegments())}</p>
           </div>
-          <span className="text-[9px] font-black text-[var(--neutral-500)] uppercase">Feed Pip</span>
-        </button>
-        <button
-          onClick={handleBookshelfClick}
-          className="w-full text-left p-3.5 chunky-button flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2">
-            <span>📚</span>
-            <span className="text-xs font-black">Bookshelf</span>
-          </div>
-          <span className="text-[9px] font-black text-[var(--neutral-500)] uppercase">Learn</span>
-        </button>
-        <button
-          onClick={() => {
-            alert("Hmm, this wardrobe is locked for now. Perhaps we will find clothes later!");
-          }}
-          className="w-full text-left p-3.5 chunky-button flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2">
-            <span>🚪</span>
-            <span className="text-xs font-black">Wardrobe</span>
-          </div>
-          <span className="text-[9px] font-black text-red-600 uppercase">Locked</span>
-        </button>
-        <button
-          onClick={handleCabbitClick}
-          className="w-full text-left p-3.5 chunky-button flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2">
-            <span>🐰</span>
-            <span className="text-xs font-black">Rug / Pip</span>
-          </div>
-          <span className="text-[9px] font-black text-[var(--neutral-500)] uppercase">Interact</span>
-        </button>
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -151,6 +189,8 @@ interface HomeContentProps {
   handleBowlClick: () => Promise<void>;
   handleBookshelfClick: () => void;
   handleCabbitClick: () => void;
+  screenFlash: boolean;
+  showPing: boolean;
 }
 
 export function HomeContent({
@@ -168,9 +208,43 @@ export function HomeContent({
   handleBowlClick,
   handleBookshelfClick,
   handleCabbitClick,
+  screenFlash,
+  showPing,
 }: HomeContentProps) {
   const { companion, isLoading, quests, memories, journalEntries } = useCompanion();
   const { weather } = useMainShell();
+
+  const handlePlantClick = () => {
+    setIsBubbleOpen(true);
+    if (companion && companion.cabbitMood === "sleeping") {
+      setBubbleText("Zzz... Pip is sleeping peacefully and cannot water the plant right now.");
+      return;
+    }
+    playWaterSound();
+    setBubbleText("Ah! Thank you for the water! 💧 The plant looks so happy now! 🌱");
+  };
+
+  const handleWindowClick = () => {
+    setIsBubbleOpen(true);
+    if (weather === "rainy") {
+      setBubbleText("It's raining today! 🌧️ Do you like listening to the raindrops too?");
+    } else if (weather === "snowy") {
+      setBubbleText("Brr, it's snowy outside! ❄️ Do you prefer building snowmen or staying cozy inside?");
+    } else {
+      setBubbleText("What a beautiful sunny day! ☀️ Do you have a favorite outdoor game you like to play?");
+    }
+  };
+
+  const handleTableClick = () => {
+    setIsBubbleOpen(true);
+    if (companion && companion.cabbitMood === "sleeping") {
+      setBubbleText("Zzz... Pip is sleeping and shouldn't drink cocoa right now.");
+      return;
+    }
+    const randIdx = Math.floor(Math.random() * LITERATURE_QUOTES.length);
+    const selected = LITERATURE_QUOTES[randIdx];
+    setBubbleText(`*sips warm tea* ☕ Here is a nice quote for you:\n"${selected.quote}" — ${selected.author}`);
+  };
 
   // Initial greeting
   useEffect(() => {
@@ -223,6 +297,10 @@ export function HomeContent({
     return "/assets/pip_idle.png";
   };
 
+  const isCabbitIdle = getPipSprite() === "/assets/pip_idle.png";
+  const showMainModel = isCabbitIdle || isHopping || companion.cabbitMood === "sleeping";
+
+
   return (
     <div className="flex-1 flex relative overflow-hidden h-full w-full bg-[var(--neutral-0)] select-none">
       {/* Weather Overlay Filters */}
@@ -230,224 +308,220 @@ export function HomeContent({
       {weather === "snowy" && <div className="absolute inset-0 bg-[#A6C0D9]/10 pointer-events-none z-5" />}
       {companion.cabbitMood === "sleeping" && <div className="absolute inset-0 bg-[#1A1E29]/30 pointer-events-none z-5" />}
 
-      {/* Room Container (Full Bleed View Version) */}
       <div
         className={`relative w-full h-full transition-all duration-700 overflow-hidden ${
-          zoomTransition ? "scale-110 translate-x-12 -translate-y-6" : "scale-100"
+          zoomTransition ? "scale-120 -translate-x-[18%] translate-y-[10%]" : "scale-100"
         }`}
       >
-        {/* Clay Bedroom Background Image (Full Bleed) */}
-        <img 
-          src="/assets/cozy_room_bg.png" 
-          alt="Bedroom Background" 
-          className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none z-0" 
-        />
+        <motion.div
+          initial={{ filter: "blur(16px)", scale: 0.97 }}
+          animate={{ filter: "blur(0px)", scale: 1 }}
+          transition={{ type: "spring", stiffness: 85, damping: 16 }}
+          className="absolute inset-0 size-full"
+        >
+          {/* Top-Anchored dialogue Bubble */}
+          <AnimatePresence>
+            {isBubbleOpen && bubbleText && (
+              <TypedSpeechBubble
+                text={bubbleText}
+                name={companion.name}
+                onClose={() => setIsBubbleOpen(false)}
+              />
+            )}
+          </AnimatePresence>
 
-        {/* 3D ISOMETRIC PLAYGROUND CANVAS */}
-        <div className="absolute inset-0 flex items-center justify-center isometric-stage z-10">
-          
-          <div className="relative w-[500px] h-[500px] isometric-grid-canvas">
+          {/* Clay Bedroom Background Image (Full Bleed) */}
+          <img 
+            src="/assets/cozy_room_bg.png" 
+            alt="Bedroom Background" 
+            className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none z-0" 
+          />
+
+          {/* HITBOX OVERLAYS */}
+          {/* Bed Hitbox */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            onClick={handleToggleSleep}
+            className="hitbox-overlay z-20"
+            style={{ left: "5.08%", top: "23.58%", width: "25.44%", height: "31.3%" }}
+            title={companion.cabbitMood === "sleeping" ? "Wake Pip" : "Put Pip to Sleep"}
+          />
+
+          {/* Bookshelf Hitbox */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            onClick={handleBookshelfClick}
+            className="hitbox-overlay z-20"
+            style={{ left: "65.5%", top: "30.82%", width: "23.85%", height: "24.06%" }}
+            title="Bookshelf"
+          >
+            {showPing && (
+              <div className="relative flex h-10 w-10 items-center justify-center pointer-events-none animate-fade-in">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-60"></span>
+                <span className="relative inline-flex rounded-full h-5 w-5 bg-amber-500 border-2 border-black shadow-sm flex items-center justify-center text-[10px]">
+                  📖
+                </span>
+              </div>
+            )}
+          </motion.div>
+
+          {/* Door Hitbox */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            onClick={() => {
+              setIsBubbleOpen(true);
+              setBubbleText("Hmm, this wardrobe is locked for now. Perhaps we will find clothes later!");
+            }}
+            className="hitbox-overlay z-20"
+            style={{ left: "91.8%", top: "41.77%", width: "8.2%", height: "38.81%" }}
+            title="Wardrobe"
+          />
+
+          {/* Plant Hitbox */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            onClick={handlePlantClick}
+            className="hitbox-overlay z-20"
+            style={{ left: "0%", top: "78.21%", width: "18.99%", height: "21.79%" }}
+            title="Water Plant"
+          />
+
+          {/* Window Hitbox */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            onClick={handleWindowClick}
+            className="hitbox-overlay z-20"
+            style={{ left: "35%", top: "5%", width: "30%", height: "25%" }}
+            title="Look Outside"
+          />
+
+          {/* Table & Mug Hitbox */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            onClick={handleTableClick}
+            className="hitbox-overlay z-20"
+            style={{ left: "25%", top: "65%", width: "20%", height: "25%" }}
+            title="Drink Tea"
+          />
+
+          {/* Food Bowl Hitbox */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            onClick={handleBowlClick}
+            className="hitbox-overlay z-20"
+            style={{ left: "81%", top: "53%", width: "8%", height: "10%" }}
+            title="Feed Pip"
+          />
+
+          {/* 3D ISOMETRIC PLAYGROUND CANVAS */}
+          <div className="absolute inset-0 flex items-center justify-center isometric-stage z-10">
             
-            {/* Isometric 4x4 Grid Board */}
-            <div className="absolute inset-0 grid grid-cols-4 grid-rows-4 border-4 border-black bg-white/5 relative overflow-hidden">
-              {Array.from({ length: 16 }).map((_, i) => {
-                const x = i % 4;
-                const y = Math.floor(i / 4);
-                const isRug = x === 2 && y === 2;
-                return (
-                  <div
-                    key={i}
-                    className="border border-[var(--neutral-200)] relative flex items-center justify-center"
-                  >
-                    {isRug && (
-                      /* Flat Rug on the floor (2D) */
-                      <div className="absolute inset-2 bg-[var(--neutral-300)] rounded-full border-2 border-black border-dashed" />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            <div className="relative w-[500px] h-[500px] isometric-grid-canvas">
+              {/* Isometric 4x4 Grid Board (Invisible to keep companion positioning logic clean) */}
+              <div className="absolute inset-0 grid grid-cols-4 grid-rows-4 bg-transparent relative overflow-hidden" />
 
-            {/* HOTSPOT 1: Bed at (0, 0) */}
-            <div
-              className="absolute pointer-events-auto"
-              style={{ left: "0%", top: "0%", width: "25%", height: "25%", transformStyle: "preserve-3d" }}
-            >
-              <div className="isometric-billboard-sprite size-full flex items-center justify-center">
-                <motion.button
-                  whileHover={{ scale: 1.05, rotateY: 5, y: -4 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                  onClick={handleToggleSleep}
-                  className="chunky-button p-3 flex flex-col items-center justify-center text-center group relative -translate-y-8"
-                  style={{ width: "90px", height: "90px" }}
-                >
-                  <span className="text-3xl select-none group-hover:animate-bounce">🛏️</span>
-                  <span className="text-[10px] font-black text-black mt-1">Bed</span>
-                  <span className="text-[8px] font-bold text-[var(--neutral-500)] uppercase mt-0.5">
-                    {companion.cabbitMood === "sleeping" ? "Wake" : "Sleep"}
-                  </span>
-                </motion.button>
-              </div>
-            </div>
+              {/* THE COMPANION BILLBOARD SPRITE */}
+              <motion.div
+                className="absolute flex items-center justify-center z-20"
+                style={{
+                  left: showMainModel ? `${(pipTile.x * 25) - 12.5}%` : `${pipTile.x * 25}%`,
+                  top: showMainModel ? `${(pipTile.y * 25) - 12.5}%` : `${pipTile.y * 25}%`,
+                  width: "25%",
+                  height: "25%",
+                  transformStyle: "preserve-3d",
+                }}
+                animate={{
+                  left: showMainModel ? `${(pipTile.x * 25) - 12.5}%` : `${pipTile.x * 25}%`,
+                  top: showMainModel ? `${(pipTile.y * 25) - 12.5}%` : `${pipTile.y * 25}%`,
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 100,
+                  damping: 15
+                }}
+              >
+                {/* Flat drop-shadow on the floor */}
+                {!showMainModel && (
+                  <div className="absolute inset-x-4 bottom-1 h-3 bg-black/20 rounded-full blur-[1.5px]" />
+                )}
 
-            {/* HOTSPOT 2: Bookshelf at (3, 0) */}
-            <div
-              className="absolute pointer-events-auto"
-              style={{ left: "75%", top: "0%", width: "25%", height: "25%", transformStyle: "preserve-3d" }}
-            >
-              <div className="isometric-billboard-sprite size-full flex items-center justify-center">
-                <motion.button
-                  whileHover={{ scale: 1.03, rotate: 2, y: -6 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                  onClick={handleBookshelfClick}
-                  className="chunky-button p-3 flex flex-col items-center justify-center text-center group relative -translate-y-12"
-                  style={{ width: "70px", height: "120px" }}
-                >
-                  <span className="text-3xl select-none group-hover:rotate-6 transition-transform">📚</span>
-                  <span className="text-[10px] font-black text-black mt-2 leading-tight">Bookshelf</span>
-                  <span className="text-[8px] font-bold text-[var(--neutral-500)] uppercase mt-1">Learn</span>
-                </motion.button>
-              </div>
-            </div>
+                <div className="isometric-billboard-sprite size-full flex items-center justify-center relative">
 
-            {/* HOTSPOT 3: Wardrobe at (3, 3) */}
-            <div
-              className="absolute pointer-events-auto"
-              style={{ left: "75%", top: "75%", width: "25%", height: "25%", transformStyle: "preserve-3d" }}
-            >
-              <div className="isometric-billboard-sprite size-full flex items-center justify-center">
-                <motion.button
-                  whileHover={{ scaleX: 1.05, y: -4 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                  onClick={() => {
-                    setIsBubbleOpen(true);
-                    setBubbleText("Hmm, this wardrobe is locked for now. Perhaps we will find clothes later!");
-                  }}
-                  className="chunky-button p-3 flex flex-col items-center justify-center text-center group relative -translate-y-12"
-                  style={{ width: "70px", height: "120px" }}
-                >
-                  <span className="text-3xl select-none group-hover:scale-105 transition-transform">🚪</span>
-                  <span className="text-[10px] font-black text-black mt-2 leading-tight">Wardrobe</span>
-                  <span className="text-[8px] font-bold text-red-600 uppercase mt-1">Locked</span>
-                </motion.button>
-              </div>
-            </div>
-
-            {/* HOTSPOT 4: Food Bowl at (0, 3) */}
-            <div
-              className="absolute pointer-events-auto"
-              style={{ left: "0%", top: "75%", width: "25%", height: "25%", transformStyle: "preserve-3d" }}
-            >
-              <div className="isometric-billboard-sprite size-full flex items-center justify-center">
-                <motion.button
-                  whileHover={{ rotate: [-2, 2, -2, 0], scale: 1.06, y: -2 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                  onClick={handleBowlClick}
-                  className="chunky-button p-2 flex flex-col items-center justify-center text-center group relative -translate-y-6"
-                  style={{ width: "80px", height: "80px" }}
-                >
-                  <span className="text-2xl select-none group-hover:scale-110 transition-transform">🥣</span>
-                  <span className="text-[10px] font-black text-black mt-1">Bowl</span>
-                  <span className="text-[8px] font-bold text-[var(--neutral-500)] uppercase mt-0.5">Feed</span>
-                </motion.button>
-              </div>
-            </div>
-
-            {/* THE COMPANION BILLBOARD SPRITE */}
-            <motion.div
-              className="absolute flex items-center justify-center z-20"
-              style={{
-                left: `${pipTile.x * 25}%`,
-                top: `${pipTile.y * 25}%`,
-                width: "25%",
-                height: "25%",
-                transformStyle: "preserve-3d",
-              }}
-              animate={{
-                left: `${pipTile.x * 25}%`,
-                top: `${pipTile.y * 25}%`,
-              }}
-              transition={{
-                type: "spring",
-                stiffness: 100,
-                damping: 15
-              }}
-            >
-              {/* Flat drop-shadow on the floor */}
-              <div className="absolute inset-x-4 bottom-1 h-3 bg-black/20 rounded-full blur-[1.5px]" />
-
-              <div className="isometric-billboard-sprite size-full flex items-center justify-center relative">
-                
-                {/* Tactics RPG Double Border Dialog Bubble */}
-                <AnimatePresence>
-                  {isBubbleOpen && bubbleText && (
-                    <TypedSpeechBubble
-                      text={bubbleText}
-                      name={companion.name}
-                      onClose={() => setIsBubbleOpen(false)}
-                    />
-                  )}
-                </AnimatePresence>
-
-                {/* Pixel Pip character asset */}
-                <motion.div
-                  onClick={handleCabbitClick}
-                  whileHover={{ y: -6, scaleY: 1.05, rotate: 1 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 12 }}
-                  className="cursor-pointer flex flex-col items-center select-none"
-                >
+                  {/* Pixel Pip character asset */}
                   <motion.div
-                    key={`${pipTile.x}-${pipTile.y}-${isHopping}`}
-                    animate={{
-                      y: [-16, 0],
-                    }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 12
-                    }}
-                    className="-translate-y-6"
+                    onClick={handleCabbitClick}
+                    whileHover={{ y: -6, scaleY: 1.05, rotate: 1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 12 }}
+                    className="cursor-pointer flex flex-col items-center select-none"
                   >
                     <motion.div
+                      key={`${pipTile.x}-${pipTile.y}-${isHopping}`}
                       animate={{
-                        scaleY: [1, 1.04, 1],
+                        y: [-16, 0],
                       }}
                       transition={{
-                        duration: 1.8,
-                        repeat: Infinity,
-                        ease: "easeInOut"
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 12
                       }}
-                      className="w-14 h-16 relative flex items-center justify-center"
+                      className="-translate-y-6"
                     >
-                      <img 
-                        src={getPipSprite()} 
-                        alt="Pip" 
-                        className="w-full h-full object-contain pixelated pointer-events-none" 
-                        style={{ imageRendering: "pixelated" }}
-                      />
+                      <motion.div
+                        animate={{
+                          scaleY: [1, 1.04, 1],
+                        }}
+                        transition={{
+                          duration: 1.8,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                        className={showMainModel ? "w-[240px] h-[240px] relative flex items-center justify-center" : "w-14 h-16 relative flex items-center justify-center"}
+                      >
+                        {showMainModel ? (
+                          <div className={companion.cabbitMood === "sleeping" ? "rotate-[-70deg] translate-x-[-10px] translate-y-[20px] scale-[0.8]" : ""}>
+                            <div className="cabbit-sprite-idle w-[240px] h-[240px] bg-contain bg-center bg-no-repeat" />
+                          </div>
+                        ) : (
+                          <img 
+                            src={getPipSprite()} 
+                            alt="Pip" 
+                            className="w-full h-full object-contain pixelated pointer-events-none" 
+                            style={{ imageRendering: "pixelated" }}
+                          />
+                        )}
+                      </motion.div>
                     </motion.div>
+
                   </motion.div>
 
-                  <div className="absolute bottom-2 bg-[var(--neutral-1000)] text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm select-none border border-black">
-                    {companion.name}
-                  </div>
-                </motion.div>
+                </div>
+              </motion.div>
 
-              </div>
-            </motion.div>
+            </div>
 
           </div>
-
-        </div>
+        </motion.div>
 
         {/* FLOATING DAILY QUEST CARD (Pinned to Top-Right of view) */}
-        <div className="absolute right-8 top-8 w-[180px] chunky-panel p-4 flex flex-col gap-2 pointer-events-none select-none z-25 animate-fade-in bg-white">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.85, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 120, damping: 12, delay: 0.35 }}
+          className="absolute right-8 top-8 w-[180px] chunky-panel p-4 flex flex-col gap-2 pointer-events-none select-none z-25 bg-white"
+        >
           <span className="text-[9px] font-black uppercase tracking-wider text-[var(--neutral-500)]">Active Tracker</span>
           <h5 className="text-xxs font-extrabold text-[var(--neutral-900)] truncate mt-0.5">{activeQuest.title}</h5>
           <div className="h-2 bg-[var(--neutral-200)] border border-black rounded-none overflow-hidden w-full">
             <div className="h-full bg-[var(--neutral-1000)]" style={{ width: `${questProgress}%` }} />
           </div>
-        </div>
+        </motion.div>
+
+        {/* Full-screen Flash/Fade Overlay */}
+        <div 
+        className={`absolute inset-0 bg-[#fefdf9] z-[9999] pointer-events-none transition-opacity duration-250 ${
+          screenFlash ? "opacity-100" : "opacity-0"
+        }`} 
+      />
 
       </div>
     </div>
@@ -457,39 +531,43 @@ export function HomeContent({
 export default function Home() {
   const { companion, isLoading, feedCabbit, toggleSleep } = useCompanion();
   const router = useRouter();
+  const { setSidebarContent } = useMainShellSidebar();
 
   const [bubbleText, setBubbleText] = useState<string>("");
-  const [isBubbleOpen, setIsBubbleOpen] = useState(true);
+  const [isBubbleOpen, setIsBubbleOpen] = useState(false);
+  const [showPing, setShowPing] = useState(false);
   const [zoomTransition, setZoomTransition] = useState(false);
+  const [screenFlash, setScreenFlash] = useState(false);
   const [pipTile, setPipTile] = useState<{ x: number; y: number }>({ x: 2, y: 2 });
   const [isHopping, setIsHopping] = useState(false);
 
-  // Sync Pip tile with sleeping state on load/change
   useEffect(() => {
-    if (companion) {
-      if (companion.cabbitMood === "sleeping") {
-        setPipTile({ x: 0, y: 0 });
-      } else {
-        setPipTile({ x: 2, y: 2 });
-      }
-    }
-  }, [companion?.cabbitMood]);
+    setSidebarContent(<HomeSidebar />);
+    return () => setSidebarContent(null);
+  }, [setSidebarContent]);
 
-  if (isLoading || !companion) return null;
+  // Delay dialogue bubble entry and bookshelf action ping until blur transition settles
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsBubbleOpen(true);
+      setShowPing(true);
+    }, 65);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleToggleSleep = async () => {
     setIsBubbleOpen(true);
     setIsHopping(true);
     
     // Hop target coordination
-    const target = companion.cabbitMood === "sleeping" ? { x: 2, y: 2 } : { x: 0, y: 0 };
+    const target = companion && companion.cabbitMood === "sleeping" ? { x: 2, y: 2 } : { x: 0, y: 0 };
     setPipTile(target);
 
     // Short hop delay
     setTimeout(async () => {
       setIsHopping(false);
       await toggleSleep();
-      if (companion.cabbitMood === "sleeping") {
+      if (companion && companion.cabbitMood === "sleeping") {
         setBubbleText("Yawn... Good morning! Let's play!");
       } else {
         setBubbleText("Zzz... Good night!");
@@ -499,11 +577,11 @@ export default function Home() {
 
   const handleBowlClick = async () => {
     setIsBubbleOpen(true);
-    if (companion.cabbitMood === "sleeping") {
+    if (companion && companion.cabbitMood === "sleeping") {
       setBubbleText("Shh, I'm sleeping right now!");
       return;
     }
-    if (companion.carrotCoins < 5) {
+    if (companion && companion.carrotCoins < 5) {
       setBubbleText("Oh, we need more Carrot Coins! Let's complete a quest!");
       return;
     }
@@ -530,44 +608,64 @@ export default function Home() {
     setZoomTransition(true);
     setBubbleText("Let's go look at the books!");
     setTimeout(() => {
+      setScreenFlash(true);
+    }, 350);
+    setTimeout(() => {
       router.push("/bookshelf");
     }, 600);
   };
 
   const handleCabbitClick = () => {
     setIsBubbleOpen(true);
-    if (companion.cabbitMood === "sleeping") {
+    if (companion && companion.cabbitMood === "sleeping") {
       setBubbleText("Zzz... Pip is sleeping peacefully.");
       return;
     }
     setBubbleText("Pip is happy to be here with you!");
   };
 
+  // Sync Pip tile with sleeping state on load/change
+  useEffect(() => {
+    if (companion) {
+      if (companion.cabbitMood === "sleeping") {
+        setPipTile({ x: 0, y: 0 });
+      } else {
+        setPipTile({ x: 2, y: 2 });
+      }
+    }
+  }, [companion?.cabbitMood]);
+
+  // Wake companion with ESC key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && companion && companion.cabbitMood === "sleeping") {
+        handleToggleSleep();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [companion, handleToggleSleep]);
+
+  if (isLoading || !companion) return null;
+
   return (
-    <MainShell sidebarContent={
-      <HomeSidebar 
-        handleToggleSleep={handleToggleSleep}
-        handleBowlClick={handleBowlClick}
-        handleBookshelfClick={handleBookshelfClick}
-        handleCabbitClick={handleCabbitClick}
-      />
-    }>
-      <HomeContent 
-        bubbleText={bubbleText} 
-        setBubbleText={setBubbleText} 
-        isBubbleOpen={isBubbleOpen} 
-        setIsBubbleOpen={setIsBubbleOpen} 
-        zoomTransition={zoomTransition} 
-        setZoomTransition={setZoomTransition} 
-        pipTile={pipTile}
-        setPipTile={setPipTile}
-        isHopping={isHopping}
-        setIsHopping={setIsHopping}
-        handleToggleSleep={handleToggleSleep}
-        handleBowlClick={handleBowlClick}
-        handleBookshelfClick={handleBookshelfClick}
-        handleCabbitClick={handleCabbitClick}
-      />
-    </MainShell>
+    <HomeContent 
+      bubbleText={bubbleText} 
+      setBubbleText={setBubbleText} 
+      isBubbleOpen={isBubbleOpen} 
+      setIsBubbleOpen={setIsBubbleOpen} 
+      zoomTransition={zoomTransition} 
+      setZoomTransition={setZoomTransition} 
+      pipTile={pipTile}
+      setPipTile={setPipTile}
+      isHopping={isHopping}
+      setIsHopping={setIsHopping}
+      handleToggleSleep={handleToggleSleep}
+      handleBowlClick={handleBowlClick}
+      handleBookshelfClick={handleBookshelfClick}
+      handleCabbitClick={handleCabbitClick}
+      screenFlash={screenFlash}
+      showPing={showPing}
+    />
   );
 }

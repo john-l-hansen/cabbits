@@ -109,6 +109,7 @@ type CompanionContextType = {
   addCoins: (amount: number) => Promise<void>;
   approveDraftObject: (objectId: string) => Promise<void>;
   discardDraftObject: (objectId: string) => Promise<void>;
+  useInventoryItem: (itemId: string) => Promise<void>;
 };
 
 const CompanionContext = createContext<CompanionContextType | undefined>(undefined);
@@ -335,7 +336,7 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
             const interests = parsed.interests || {};
             setCompanion({
               ...parsed,
-              inventory: parsed.inventory || [],
+              inventory: (parsed.inventory && parsed.inventory.length > 0) ? parsed.inventory : ["carrot", "carrot", "carrot", "apple", "apple", "mushroom", "mushroom", "fruit_basket", "milk", "juice", "feather", "lantern"],
               interests: interests,
             });
 
@@ -398,7 +399,7 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
       cabbitMood: "idle",
       cabbitLocation: "rug",
       createdAt,
-      inventory: [],
+      inventory: ["carrot", "carrot", "carrot", "apple", "apple", "mushroom", "mushroom", "fruit_basket", "milk", "juice", "feather", "lantern"],
       interests: {},
     };
 
@@ -1104,6 +1105,60 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const useInventoryItem = async (itemId: string) => {
+    if (!companion) return;
+
+    const itemIndex = companion.inventory.indexOf(itemId);
+    if (itemIndex === -1) return; // Item not in inventory
+
+    const newInventory = [...companion.inventory];
+    newInventory.splice(itemIndex, 1);
+
+    let newCuriosity = companion.curiosity;
+    let newInsightsCount = companion.insightsCount;
+    let mood = companion.cabbitMood;
+
+    if (itemId === "carrot") {
+      newCuriosity += 10;
+      mood = "happy";
+      if (newCuriosity >= 100) {
+        newCuriosity = 0;
+        newInsightsCount += 1;
+      }
+    }
+
+    const updatedCompanion: Companion = {
+      ...companion,
+      inventory: newInventory,
+      curiosity: newCuriosity,
+      insightsCount: newInsightsCount,
+      cabbitMood: mood,
+    };
+
+    setCompanion(updatedCompanion);
+
+    try {
+      localStorage.setItem(COMPANION_STORAGE_KEY, JSON.stringify(updatedCompanion));
+    } catch (e) {
+      console.error("Local save failed for useInventoryItem:", e);
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase
+          .from("companions")
+          .update({
+            curiosity: newCuriosity,
+            insights_count: newInsightsCount,
+            cabbit_mood: mood,
+          })
+          .eq("id", companion.id);
+      } catch (e) {
+        console.error("Database update failed for useInventoryItem:", e);
+      }
+    }
+  };
+
   const resetCompanion = async () => {
     const prevCompanionId = companion?.id;
     setCompanion(null);
@@ -1159,6 +1214,7 @@ export function CompanionProvider({ children }: { children: React.ReactNode }) {
         addCoins,
         approveDraftObject,
         discardDraftObject,
+        useInventoryItem,
       }}
     >
       {children}

@@ -63,11 +63,13 @@ export function CabbitVectorPreview({
   eyeStyle,
   furColor,
   keepsakeText,
+  className = "w-32 h-32 mx-auto",
 }: {
   earStyle: "floppy" | "pointy" | "round";
   eyeStyle: "wide" | "sleepy" | "sparkle";
   furColor: string;
   keepsakeText?: string;
+  className?: string;
 }) {
   const colorMap: Record<string, string> = {
     cream: "#fcf6eb",
@@ -82,7 +84,7 @@ export function CabbitVectorPreview({
   const parsed = keepsakeText ? parseKeepsake(keepsakeText) : null;
 
   return (
-    <svg viewBox="0 0 200 200" className="w-32 h-32 mx-auto relative overflow-visible select-none">
+    <svg viewBox="0 0 200 200" className={`${className} relative overflow-visible select-none`}>
       {/* Ears */}
       {earStyle === "pointy" && (
         <>

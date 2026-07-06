@@ -5,7 +5,8 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCompanion } from "@/components/providers/CompanionProvider";
 import { Book } from "@/types";
-import { MainShell } from "@/components/layout/MainShell";
+import { useMainShellSidebar } from "@/components/layout/MainShell";
+import { motion } from "framer-motion";
 
 type ReadingState = {
   book: Book;
@@ -266,7 +267,7 @@ function BookshelfSidebar({
     // FLOW STATE 1: ACTIVE READING SIDEBAR
     const bookPages = BOOK_PAGES[activeReading.book.id] || [{ text: "" }];
     return (
-      <div className="w-full text-left space-y-6 animate-fade-in">
+      <div className="w-full text-left space-y-6">
         <button
           onClick={() => {
             setActiveReading(null);
@@ -332,7 +333,7 @@ function BookshelfSidebar({
   if (selectedBook) {
     // FLOW STATE 2: BOOK DETAILS INTRO SIDEBAR
     return (
-      <div className="w-full text-left space-y-6 animate-fade-in">
+      <div className="w-full text-left space-y-6">
         <button
           onClick={() => setSelectedBook(null)}
           className="text-[10px] font-extrabold text-[var(--neutral-500)] hover:text-black cursor-pointer bg-transparent border-none outline-none text-left uppercase"
@@ -586,7 +587,12 @@ export function BookshelfContent({
 
   return (
     <>
-    <div className="flex-1 flex overflow-hidden relative w-full h-full bg-[var(--neutral-0)] animate-scale-up">
+    <motion.div
+      initial={{ filter: "blur(16px)", scale: 0.97 }}
+      animate={{ filter: "blur(0px)", scale: 1 }}
+      transition={{ type: "spring", stiffness: 85, damping: 16 }}
+      className="flex-1 flex overflow-hidden relative w-full h-full bg-[var(--neutral-0)]"
+    >
       {/* FLOW STATE 1: ACTIVE READING PAGE */}
       {activeReading ? (
         <div className="flex-1 bg-[var(--neutral-50)] p-8 flex gap-6 overflow-hidden relative">
@@ -688,7 +694,7 @@ export function BookshelfContent({
         
         /* FLOW STATE 2: BOOK DETAILS INTRO PAGE */
         <div className="flex-1 bg-[var(--neutral-0)] p-8 flex flex-col items-center justify-center overflow-y-auto">
-          <div className="flex flex-col gap-[32px] items-center justify-center max-w-[600px] text-center w-full animate-fade-in">
+          <div className="flex flex-col gap-[32px] items-center justify-center max-w-[600px] text-center w-full">
             
             {/* Large blueprint book cover */}
             <div className="bg-[var(--neutral-50)] chunky-panel border-dashed border-black/45 flex flex-col gap-3 items-center justify-center w-[400px] h-[460px] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative select-none">
@@ -731,10 +737,20 @@ export function BookshelfContent({
       ) : (
         
         /* FLOW STATE 3: BOOKSHELF DIRECTORY BROWSER */
-        <div className="flex-1 bg-[var(--neutral-50)] p-8 flex flex-col gap-6 overflow-y-auto">
-          
+        <div className="flex-1 p-8 flex flex-col gap-6 overflow-y-auto relative overflow-hidden">
+          {/* Background Shelf Image */}
+          <div className="absolute inset-0 select-none pointer-events-none z-0 size-full">
+            <img 
+              src="/assets/bookshelf_bg.png" 
+              alt="Bookshelf Backdrop" 
+              className="w-full h-full object-cover opacity-95" 
+            />
+            {/* Subtle paper grain texture overlay */}
+            <div className="absolute inset-0 bg-black/5 mix-blend-multiply opacity-25 pointer-events-none" />
+          </div>
+
           {/* Search Bar & Filters */}
-          <div className="flex gap-4 items-center justify-between">
+          <div className="flex gap-4 items-center justify-between relative z-10">
             <div className="flex-1 bg-white border border-[var(--neutral-300)] rounded-full px-4 py-2 flex items-center gap-2 max-w-md">
               <span className="text-xs select-none">🔍</span>
               <input
@@ -781,7 +797,7 @@ export function BookshelfContent({
           </div>
 
           {/* Books list grid */}
-          <div className="grid grid-cols-4 gap-4 mt-2">
+          <div className="grid grid-cols-4 gap-4 mt-2 relative z-10">
             {filteredBooks.map((b) => (
               <button
                 key={b.id}
@@ -826,7 +842,7 @@ export function BookshelfContent({
 
       )}
 
-    </div>
+    </motion.div>
 
     {/* FLOW STATE 4: STORY COMPLETE REWARDS MODAL */}
     {completedBook && (
@@ -923,9 +939,18 @@ export default function BookshelfPage() {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [activeReading, setActiveReading] = useState<ReadingState | null>(null);
   const [activeCategory, setActiveCategory] = useState<"all" | "stories" | "guides" | "poetry" | "puzzles">("all");
+  const [entryFade, setEntryFade] = useState(true);
+  const { setSidebarContent } = useMainShellSidebar();
 
-  return (
-    <MainShell sidebarContent={
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setEntryFade(false);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    setSidebarContent(
       <BookshelfSidebar
         selectedBook={selectedBook}
         setSelectedBook={setSelectedBook}
@@ -934,7 +959,12 @@ export default function BookshelfPage() {
         activeCategory={activeCategory}
         setActiveCategory={setActiveCategory}
       />
-    }>
+    );
+    return () => setSidebarContent(null);
+  }, [selectedBook, activeReading, activeCategory, setSidebarContent]);
+
+  return (
+    <>
       <BookshelfContent
         selectedBook={selectedBook}
         setSelectedBook={setSelectedBook}
@@ -943,6 +973,13 @@ export default function BookshelfPage() {
         activeCategory={activeCategory}
         setActiveCategory={setActiveCategory}
       />
-    </MainShell>
+
+      {/* Main Content Flash/Fade-Out Entry Overlay */}
+      <div 
+        className={`absolute inset-0 bg-[#fefdf9] z-[9999] pointer-events-none transition-opacity duration-250 ${
+          entryFade ? "opacity-100" : "opacity-0"
+        }`} 
+      />
+    </>
   );
 }

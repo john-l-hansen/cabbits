@@ -50,6 +50,7 @@ export type Item = {
   icon: string;
   type: "consumable" | "collectible";
   locationOrigin: string;
+  image?: string;
 };
 
 export type DraftObject = {

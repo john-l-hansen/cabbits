@@ -77,7 +77,30 @@ const SegmentedMeter = ({ max = 5, filled, type }: { max?: number; filled: numbe
   </div>
 );
 
-export function MainShell({ children, sidebarContent }: { children: React.ReactNode; sidebarContent?: React.ReactNode }) {
+export interface MainShellSidebarContextType {
+  sidebarContent: React.ReactNode;
+  setSidebarContent: (content: React.ReactNode) => void;
+}
+
+export const MainShellSidebarContext = createContext<MainShellSidebarContextType | null>(null);
+
+export function useMainShellSidebar() {
+  const ctx = useContext(MainShellSidebarContext);
+  if (!ctx) throw new Error("useMainShellSidebar must be used within MainShellSidebarProvider");
+  return ctx;
+}
+
+export function MainShellSidebarProvider({ children }: { children: React.ReactNode }) {
+  const [sidebarContent, setSidebarContent] = useState<React.ReactNode>(null);
+  return (
+    <MainShellSidebarContext.Provider value={{ sidebarContent, setSidebarContent }}>
+      {children}
+    </MainShellSidebarContext.Provider>
+  );
+}
+
+export function MainShell({ children }: { children: React.ReactNode }) {
+  const { sidebarContent } = useMainShellSidebar();
   const {
     companion,
     isLoading,
@@ -130,6 +153,25 @@ export function MainShell({ children, sidebarContent }: { children: React.ReactN
     const interval = setInterval(updateTime, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Global ESC shortcut navigation & overlays cancellation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (activeSheet !== "none") {
+          setActiveSheet("none");
+        } else if (showMailbox) {
+          setShowMailbox(false);
+        } else if (showSettings) {
+          setShowSettings(false);
+        } else if (pathname !== "/") {
+          router.push("/");
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeSheet, showMailbox, showSettings, pathname, router]);
 
   // Support opening profile slideover on load if URL has sheet=profile
   useEffect(() => {
@@ -216,50 +258,52 @@ export function MainShell({ children, sidebarContent }: { children: React.ReactN
     return "★★☆☆☆";
   };
 
+  const user = typeof window !== "undefined" && localStorage.getItem("cabbits_user") ? JSON.parse(localStorage.getItem("cabbits_user")!) : null;
+  const userName = user ? (user.username || user.email.split("@")[0]) : "Alex Morgan";
+
   return (
     <MainShellContext.Provider value={{ weather, timeStr }}>
       <main className="h-screen w-screen relative overflow-hidden bg-[var(--neutral-0)] font-sans select-none flex flex-col">
         
         {/* TOP BAR */}
-        <header className="h-[48px] border-b border-[var(--neutral-200)] px-[24px] flex items-center justify-between bg-[var(--neutral-0)] shrink-0 z-10 select-none">
-          <div className="flex items-center gap-[12px]">
-            <span className="text-[14px] font-semibold text-[var(--neutral-900)] tracking-[0.07px]">Cabbits OS</span>
-            <div className="h-4 w-px bg-[var(--neutral-300)]" />
+        <header className="p-[24px] border-b-2 border-black flex items-center justify-between bg-[#fefdf9] shrink-0 z-10 select-none">
+          <div className="flex items-center gap-[8px]">
+            <p className="[word-break:break-word] font-sans font-bold leading-[1.65] not-italic relative shrink-0 text-[16px] text-[#181818] tracking-[0.5px] whitespace-nowrap">
+              {timeStr}
+            </p>
             <button
               onClick={handleWeatherClick}
-              className="bg-[var(--neutral-0)] border border-[var(--neutral-300)] rounded-full px-3 py-1 flex items-center gap-1.5 text-xs font-bold text-[var(--neutral-900)] cursor-pointer hover:border-[var(--neutral-1000)] transition-all outline-none"
+              className="bg-transparent border-none p-1 flex items-center justify-center text-lg cursor-pointer hover:scale-110 active:scale-90 transition-transform outline-none"
             >
               <span>{WEATHER_DETAILS[weather].icon}</span>
-              <span>{WEATHER_DETAILS[weather].label} {WEATHER_DETAILS[weather].temp}</span>
-              <span className="text-[10px] text-[var(--neutral-400)]">({timeStr})</span>
             </button>
           </div>
 
-          <div className="flex items-center gap-5">
-            <div className="bg-[var(--neutral-0)] border border-[var(--neutral-300)] rounded-full px-3.5 py-1 flex items-center gap-1.5 text-xs font-extrabold text-[var(--neutral-900)]">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-1.5 text-sm font-bold text-[#181818]">
               <span>🪙</span>
               <span>{companion.carrotCoins}</span>
             </div>
 
             <button
               onClick={() => setShowMailbox(true)}
-              className="relative bg-[var(--neutral-0)] border border-[var(--neutral-300)] rounded-full p-2 flex items-center justify-center cursor-pointer hover:border-[var(--neutral-1000)] active:scale-95 transition-all outline-none"
+              className="relative bg-transparent border-none p-1.5 flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-all outline-none"
             >
-              <span>✉️</span>
+              <span className="text-lg">✉️</span>
               {hasUnread && (
-                <span className="absolute top-0.5 right-0.5 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
               )}
             </button>
 
             <div className="relative">
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className="flex items-center gap-2 hover:opacity-80 active:scale-97 cursor-pointer transition-all outline-none"
+                className="flex items-center gap-2 hover:opacity-80 active:scale-97 cursor-pointer transition-all outline-none bg-transparent border-none"
               >
-                <span className="text-[14px] font-normal tracking-[0.014px] text-[var(--neutral-900)]">
-                  {typeof window !== "undefined" && localStorage.getItem("cabbits_user") ? JSON.parse(localStorage.getItem("cabbits_user")!).email : "Explorer"}
+                <span className="text-[16px] font-sans font-bold tracking-[0.5px] text-[#181818] capitalize leading-[1.65]">
+                  {userName}
                 </span>
-                <div className="h-[28px] w-[28px] rounded-full border border-[var(--neutral-1000)] bg-[var(--neutral-200)] flex items-center justify-center text-xs font-bold uppercase select-none">
+                <div className="h-[32px] w-[32px] rounded-full border border-black bg-[#e5e5e5] flex items-center justify-center text-xs font-bold uppercase select-none">
                   {companion.name.slice(0, 2)}
                 </div>
               </button>
@@ -312,20 +356,10 @@ export function MainShell({ children, sidebarContent }: { children: React.ReactN
           {/* LEFT SIDEBAR: Controls & Stats */}
           <aside className="w-[280px] border-r-4 border-black flex flex-col justify-between bg-[var(--neutral-0)] shrink-0 p-[20px] z-10 overflow-y-auto select-none">
             <div className="space-y-[24px] w-full">
-              {/* Back Navigation */}
-              {pathname !== "/" && (
-                <button
-                  onClick={() => router.push("/")}
-                  className="text-[10px] font-black uppercase tracking-[0.5px] text-[var(--neutral-500)] hover:text-black flex items-center gap-1.5 cursor-pointer outline-none bg-transparent border-none shrink-0"
-                >
-                  ← Home
-                </button>
-              )}
-
               {/* Section 1: Companion Status */}
               <div className="space-y-[12px] w-full">
-                <span className="text-[10px] font-black uppercase tracking-wider text-[var(--neutral-500)] block">Your Companion</span>
-                <div className="bg-[var(--neutral-0)] border-4 border-black p-[16px] space-y-[12px] w-full shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none">
+                
+                <div className="bg-[var(--neutral-0)] border-4 border-black p-[16px] space-y-[12px] w-full rounded-md">
                   <div className="flex items-center gap-[12px] w-full pb-2 border-b border-[var(--neutral-200)]">
                     <div className="h-[40px] w-[40px] rounded-full border-2 border-black bg-[var(--neutral-50)] flex items-center justify-center text-lg select-none">
                       🐰
@@ -624,7 +658,7 @@ export function MainShell({ children, sidebarContent }: { children: React.ReactN
                   </div>
                 </>
               ) : (
-                <div className="space-y-4 animate-fade-in">
+                <div className="space-y-4">
                   <div className="flex justify-between items-center pb-3 border-b border-[var(--neutral-200)]">
                     <button onClick={() => setSelectedLetter(null)} className="text-xs font-bold text-[var(--neutral-500)] hover:text-black cursor-pointer">← Back</button>
                     <span className="text-xs font-black uppercase tracking-wider text-[var(--neutral-400)]">Message Detail</span>
@@ -664,7 +698,7 @@ export function MainShell({ children, sidebarContent }: { children: React.ReactN
         )}
 
         {/* FLOATING BOTTOM NAV BAR */}
-        <div className="fixed bottom-[48px] left-[calc(50%+140px)] -translate-x-1/2 flex gap-[20px] items-center z-40 select-none animate-fade-in">
+        <div className="fixed bottom-[48px] left-[calc(50%+140px)] -translate-x-1/2 flex gap-[20px] items-center z-40 select-none">
           {/* Button 1: Home */}
           <button 
             onClick={() => { setActiveSheet("none"); router.push("/"); }} 

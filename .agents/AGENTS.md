@@ -22,3 +22,11 @@ These principles must infuse every aspect of this project as it continues.
 Do not invent features outside the current spec.
 Do not add speculative architecture.
 Do not connect paid APIs until explicitly requested.
+
+## Asset Pipeline & Figma Translation
+- **Granular Asset Preparation**: Prefer retaining and consuming granular, individual assets exported directly from Figma (e.g., individual frame assets `cabbit-idle-01.png` to `cabbit-idle-06.png`) instead of consolidating or stitching them into single atlas/sprite sheets. This establishes a clean, direct translation pipeline between design and code, and allows the designer to update or replace specific frames easily.
+
+## Experience Interactions
+- **Interruptible Sleep/Rest Modes**: Long-running passive loop interactions (such as the companion sleeping in bed) must be immediately cancelable/interruptible by global keyboard shortcuts, specifically the 'Escape' key, to ensure the user can instantly return to active exploration.
+
+

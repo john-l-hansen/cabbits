@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: var(--font-sans), sans-serif;
+  --font-fredoka: var(--font-fredoka), cursive;
+}
+
 :root {
   --neutral-0: #ffffff;
   --neutral-50: #f9f9f9;
@@ -22,7 +27,7 @@
 body {
   background-color: var(--neutral-50);
   color: var(--neutral-900);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
 * {
@@ -151,5 +156,35 @@ body {
 .segmented-cell.active-coins {
   background-color: #facc15; /* Gold */
 }
+
+.cabbit-sprite-idle {
+  /* Using cabbit-idle-01 as the static paper doll asset */
+  width: 240px;
+  height: 240px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  background-image: url('/assets/cabbit-idle-01.png');
+}
+
+.hitbox-overlay {
+  position: absolute;
+  border-radius: 24px;
+  cursor: pointer;
+  background-color: rgba(0, 0, 0, 0);
+  border: 2px solid transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hitbox-overlay:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  transform: scale(1.02);
+}
+
 
 
