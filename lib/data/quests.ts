@@ -196,97 +196,97 @@ const QUEST_TEMPLATES: Record<string, (vars: { count: number; name: string }) =>
   }),
   forest_oak: (vars) => ({
     id: "forest_oak",
-    title: "Oak Bark Patterns",
-    description: `The ancient oak tree shows a pattern of ${vars.count} grooves along its trunk. Examine them.`,
+    title: "Pebbles on the River Bed",
+    description: `The calm river bed displays a collection of ${vars.count} flat, polished pebbles. Inspect them.`,
     placeholder: "Select your approach below to begin.",
-    initialSaying: `“This oak tree has been standing for hundreds of years. Look at the bark, ${vars.name}!”`,
+    initialSaying: `“Look at all these smooth pebbles polished by the water, ${vars.name}! Let's examine them!”`,
     isLocked: false,
     unlockCondition: "",
     locationId: "forest",
-    poiId: "Ancient Oak Tree",
+    poiId: "River Bed",
     xpReward: 200,
     choices: [
       {
         id: "logic",
         type: "logical",
-        text: "Calculate Tree Age Curve",
-        description: "Measure the depth of the grooves and estimate the trunk growth rate to calculate its age."
+        text: "Sort Pebbles by Density",
+        description: "Categorize the pebbles by geological layers and count the distribution of granite vs quartz."
       },
       {
         id: "verbal",
         type: "verbal",
-        text: "Tell the Forest History",
-        description: "Read an old story about the woodcutter who spared this majestic oak long ago."
+        text: "Write River Bed Tales",
+        description: "Recount the history of how this river bed was formed to Pip over a cozy tea."
       },
       {
         id: "practical",
         type: "practical",
-        text: "Apply Tree Wax Seal",
-        description: "Apply a protective natural beeswax sealant to the exposed bark grooves to prevent mold."
+        text: "Sift the Sand and Gravel",
+        description: "Use a fine mesh sieve to sift the sand and isolate smooth river stones for path building."
       }
     ]
   }),
   forest_perch: (vars) => ({
     id: "forest_perch",
-    title: "Build a Nesting Box",
-    description: `Help Pip build a wooden nesting box for local bluebirds at a height of ${vars.count} feet on the High Perch.`,
+    title: "Inspect the Old Wooden Bridge",
+    description: `Help Pip inspect the wooden planks of the old bridge span across the river, measuring ${vars.count} feet long.`,
     placeholder: "Select your approach below to begin.",
-    initialSaying: `“Let's build a safe, cozy home high up in the branches, ${vars.name}!”`,
+    initialSaying: `“This old wooden bridge helps everyone cross the river safely. Let's make sure it's secure, ${vars.name}!”`,
     isLocked: false,
     unlockCondition: "",
     locationId: "forest",
-    poiId: "High Perch Branch",
+    poiId: "Bridge",
     xpReward: 200,
     choices: [
       {
         id: "logic",
         type: "logical",
-        text: "Draft Geometric Blueprints",
-        description: "Compute the correct structural ratios and angle joints to make a weather-proof design."
+        text: "Analyze Truss Forces",
+        description: "Calculate the stress and load distribution across the main support trusses of the bridge."
       },
       {
         id: "verbal",
         type: "verbal",
-        text: "Carve Forest Welcome Glyphs",
-        description: "Carve friendly, welcoming bird runes on the front door panel to invite local bluebirds."
+        text: "Carve Crossing Runes",
+        description: "Engrave clear safety symbols and welcoming traveler markers into the wooden handrails."
       },
       {
         id: "practical",
         type: "practical",
-        text: "Lash Perch Support System",
-        description: "Use sturdy ivy vines and a square knot technique to anchor the nesting box onto the branch."
+        text: "Tighten Support Bolts",
+        description: "Use a wrench to tighten loose bolts and secure weak wooden planks along the walkway."
       }
     ]
   }),
   forest_undergrowth: (vars) => ({
     id: "forest_undergrowth",
-    title: "Identify Glowing Mushrooms",
-    description: `A collection of ${vars.count} bioluminescent mushrooms has appeared in the forest shadows.`,
+    title: "Track River Current Velocity",
+    description: `The flowing river runs at a speed of ${vars.count} meters per minute. Analyze the water currents.`,
     placeholder: "Select your approach below to begin.",
-    initialSaying: `“They glow with such a soft, magical light, ${vars.name}! What should we do?”`,
+    initialSaying: `“Listen to the rushing water! It's so fast today, ${vars.name}! What should we look for?”`,
     isLocked: false,
     unlockCondition: "",
     locationId: "forest",
-    poiId: "Whispering Undergrowth",
+    poiId: "River",
     xpReward: 200,
     choices: [
       {
         id: "logic",
         type: "logical",
-        text: "Classify Spore Spacing",
-        description: "Sort the mushroom caps by size and calculate the mathematical spacing of their spore vents."
+        text: "Measure Flow Rate Dynamics",
+        description: "Time a floating leaf over a distance to calculate the average water current speed."
       },
       {
         id: "verbal",
         type: "verbal",
-        text: "Inscribe Luminescent Glyphs",
-        description: "Transcribe the patterns of light pulses to check if they match ancient Cabbits symbols."
+        text: "Compose a River Song",
+        description: "Listen to the rhythm of the rushing water and sing a song about flowing rivers."
       },
       {
         id: "practical",
         type: "practical",
-        text: "Collect Active Spore Prints",
-        description: "Press a cap gently onto a dry oak leaf to gather a clean spore print for research."
+        text: "Clear Driftwood Obstacles",
+        description: "Sift out large floating driftwood logs to keep the main channel clear and safe for forest animals."
       }
     ]
   }),

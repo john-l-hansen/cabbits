@@ -25,7 +25,7 @@ const locationExtraMetadata: Record<string, {
     items: ["Glowing Lantern"],
   },
   forest: {
-    pointsOfInterest: ["Ancient Oak Tree", "High Perch Branch", "Whispering Undergrowth"],
+    pointsOfInterest: ["River Bed", "Bridge", "River"],
     characters: ["Wise Owl", "Moss (Cabbit)"],
     items: ["Silver Acorn", "Old Feather"],
   },
@@ -266,6 +266,9 @@ export function ExploreContent({ selectedLoc, setSelectedLoc, activeQuestId, set
       wise_owl: ["Climb high branch", "Answer the owl's riddle", "Receive forest history insight"],
       tidy_tunnel: ["Sweep tunnel pine needles", "Organize glowing lichen jars", "Light entrance lantern"],
       decipher_rune: ["Examine ancient stone tablet", "Translate rune characters", "Reveal hidden library message"],
+      forest_oak: ["Examine smooth river pebbles", "Sort stones by composition", "Collect river bed samples"],
+      forest_perch: ["Inspect wooden walkway planks", "Test handrail bridge stability", "Calculate bridge truss load"],
+      forest_undergrowth: ["Observe water current flow speed", "Track floating leaves", "Check for river obstructions"],
     };
     return maps[qId] || ["Explore the landmark area", "Log your observations in the journal", "Return to your companion"];
   };
