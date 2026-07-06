@@ -100,97 +100,97 @@ const QUEST_TEMPLATES: Record<string, (vars: { count: number; name: string }) =>
   }),
   meadow_buttercups: (vars) => ({
     id: "meadow_buttercups",
-    title: "Count the Buttercups",
-    description: `A patch of ${vars.count} bright yellow buttercups has opened in the sunlight. Pip wants to study them.`,
+    title: "The Hollow Treehouse",
+    description: `Help Pip inspect the round wooden door and ${vars.count} windows carved into the roots of the ancient hollow treehouse.`,
     placeholder: "Select your approach below to begin.",
-    initialSaying: `“Look at all the yellow faces looking up at the sky! Let's examine them, ${vars.name}.”`,
+    initialSaying: `“Look at this cozy treehouse! Let's see if anyone is inside, ${vars.name}!”`,
     isLocked: false,
     unlockCondition: "",
     locationId: "meadow",
-    poiId: "Buttercup Patch",
+    poiId: "Hollow Tree",
     xpReward: 200,
     choices: [
       {
         id: "logic",
         type: "logical",
-        text: "Petal Multiplication",
-        description: `Count the petals on one stem and multiply it by the ${vars.count} stems to find the total petal count.`
+        text: "Calculate Ring Patterns",
+        description: "Examine the wood grain around the door frame to estimate the tree's growth rings."
       },
       {
         id: "verbal",
         type: "verbal",
-        text: "Translate Honeybee Cues",
-        description: "Watch the bees hovering and write down a guide to help younger companions locate nectar."
+        text: "Knock and Say Hello",
+        description: "Call out friendly greetings through the round window to introduce Pip to the resident."
       },
       {
         id: "practical",
         type: "practical",
-        text: "Soil Health Inspection",
-        description: "Examine the damp clay soil around the roots and add rich compost to keep them healthy."
+        text: "Clean the Welcome Steps",
+        description: "Sweep away loose pine needles and forest moss from the front stone steps."
       }
     ]
   }),
   meadow_clover: (vars) => ({
     id: "meadow_clover",
-    title: "Identify Clover Clusters",
-    description: `A dense patch containing ${vars.count} clover stems is growing along the clearing. Find a way to catalogue them.`,
+    title: "The Hollow Log Tunnel",
+    description: `A hollow wooden log is lying on the path, measuring ${vars.count} inches wide. Inspect what is inside.`,
     placeholder: "Select your approach below to begin.",
-    initialSaying: `“Clovers are so soft and green. Shall we explore the patch, ${vars.name}?”`,
+    initialSaying: `“This log looks like a secret tunnel, ${vars.name}! Should we peek inside?”`,
     isLocked: false,
     unlockCondition: "",
     locationId: "meadow",
-    poiId: "Purple Clover Clusters",
+    poiId: "Hollow Log",
     xpReward: 200,
     choices: [
       {
         id: "logic",
         type: "logical",
-        text: "Find Rare Four-Leaf Stems",
-        description: `Use a grid search pattern to scan the ${vars.count} stems and calculate the mathematical odds of a mutation.`
+        text: "Measure Inner Volume",
+        description: "Estimate the length and internal diameter of the log tunnel using a twigs grid."
       },
       {
         id: "verbal",
         type: "verbal",
-        text: "Share Clover Lore",
-        description: "Teach Pip the legend of the ancient Cabbits who used clovers to brew healing potions."
+        text: "Whisper into the Log",
+        description: "Whisper a soft eco-song into the opening to check for friendly echoes."
       },
       {
         id: "practical",
         type: "practical",
-        text: "Weed out Brambles",
-        description: "Carefully prune away the sharp, thorny brambles that are starting to crowd the patch."
+        text: "Clear Blocked Leaves",
+        description: "Use a stick to clear out damp leaves and dry dirt blocking the log passage."
       }
     ]
   }),
   meadow_hummingbird: (vars) => ({
     id: "meadow_hummingbird",
-    title: "Help the Hummingbirds",
-    description: `A small hummingbird has built a nest in a wild rosebush, but the wind is blowing at ${vars.count} knots.`,
+    title: "Acorns by the Tree Stump",
+    description: `Help Pip sort a pile of ${vars.count} acorns scattered around the base of the old tree stump.`,
     placeholder: "Select your approach below to begin.",
-    initialSaying: `“Oh, the poor birds are struggling against the wind gusts. Let's help them, ${vars.name}!”`,
+    initialSaying: `“Look at all these acorns! The squirrels must have dropped them, ${vars.name}. Let's help organize them.”`,
     isLocked: false,
     unlockCondition: "",
     locationId: "meadow",
-    poiId: "Hummingbird Nest",
+    poiId: "Tree Stump",
     xpReward: 200,
     choices: [
       {
         id: "logic",
         type: "logical",
-        text: "Analyze Flight Patterns",
-        description: "Observe the wing flap frequency to calculate how the birds counter the wind vectors."
+        text: "Sort by Acorn Caps",
+        description: "Categorize the acorns into mathematical groups based on whether their caps are attached."
       },
       {
         id: "verbal",
         type: "verbal",
-        text: "Reassure with Soft Calls",
-        description: "Chirp softly to calm the baby birds and show them we are friendly neighbors."
+        text: "Compose an Acorn Rhyme",
+        description: "Tell a short squirrel tale about storing food for the upcoming winter."
       },
       {
         id: "practical",
         type: "practical",
-        text: "Construct Windbreak Screen",
-        description: "Gather thick fern fronds and tie them together to shield the nest from heavy wind gusts."
+        text: "Gather in a Pile",
+        description: "Collect the scattered acorns and pile them neatly in the hollow at the base of the stump."
       }
     ]
   }),

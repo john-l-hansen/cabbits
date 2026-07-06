@@ -20,7 +20,7 @@ const locationExtraMetadata: Record<string, {
     items: ["Swan Feather"],
   },
   meadow: {
-    pointsOfInterest: ["Buttercup Patch", "Purple Clover Clusters", "Hummingbird Nest"],
+    pointsOfInterest: ["Hollow Tree", "Hollow Log", "Tree Stump"],
     characters: ["Pip (Cabbit)"],
     items: ["Glowing Lantern"],
   },
@@ -272,6 +272,9 @@ export function ExploreContent({ selectedLoc, setSelectedLoc, activeQuestId, set
       burrow_entrance: ["Inspect piano keys", "Tune acoustic guitar strings", "Adjust warm alcove string lights"],
       burrow_lichen: ["Clean dust off shelves", "Label plant species tags", "Arrange potted ferns and books"],
       burrow_tunnels: ["Check retro TV composite cables", "Plug in game console", "Tune antenna signal channels"],
+      meadow_buttercups: ["Inspect round wooden door", "Examine wood grain frames", "Sweep welcome step stone"],
+      meadow_clover: ["Measure log diameter", "Listen for inner echo sound", "Clear blocked leaves inside"],
+      meadow_hummingbird: ["Gather scattered acorns", "Sort acorns by cap types", "Stack neatly by the stump"],
     };
     return maps[qId] || ["Explore the landmark area", "Log your observations in the journal", "Return to your companion"];
   };
