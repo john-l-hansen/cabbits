@@ -45,7 +45,7 @@ const locationBackgrounds: Record<string, string> = {
   burrow: "/assets/map_burrow_bg.png",
   pond: "/assets/map_pond_bg.png",
   meadow: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
-  forest: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+  forest: "/assets/map_little_bridge_bg.png",
   library: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
 };
 
