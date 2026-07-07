@@ -389,10 +389,18 @@ export function HomeContent({
               const randomWeather = remaining[Math.floor(Math.random() * remaining.length)];
               if (setWeather) setWeather(randomWeather);
             }}
-            className="hitbox-overlay z-20"
+            className="hitbox-overlay z-20 group flex items-center justify-center"
             style={{ left: "5.08%", top: "23.58%", width: "25.44%", height: "31.3%" }}
             title="Change Background"
-          />
+          >
+            <div className="relative flex h-10 w-10 items-center justify-center pointer-events-none">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-40"></span>
+              <span className="relative inline-flex rounded-full h-10 w-10 bg-indigo-400 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] flex items-center justify-center text-lg transition-transform group-hover:scale-110">
+                🛌
+              </span>
+            </div>
+          </motion.div>
+
           {/* Carrot Calendar Hitbox */}
           <motion.div
             whileHover={{ scale: 1.02 }}
@@ -401,26 +409,32 @@ export function HomeContent({
               const nextIdx = (cycle.indexOf(weather) + 1) % cycle.length;
               if (setWeather) setWeather(cycle[nextIdx]);
             }}
-            className="hitbox-overlay z-20"
+            className="hitbox-overlay z-20 group flex items-center justify-center"
             style={{ left: "53.5%", top: "27.5%", width: "5.5%", height: "12.0%" }}
             title="Calendar"
-          />
+          >
+            <div className="relative flex h-10 w-10 items-center justify-center pointer-events-none">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-40"></span>
+              <span className="relative inline-flex rounded-full h-10 w-10 bg-orange-400 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] flex items-center justify-center text-lg transition-transform group-hover:scale-110">
+                📅
+              </span>
+            </div>
+          </motion.div>
+
           {/* Bookshelf Hitbox */}
           <motion.div
             whileHover={{ scale: 1.02 }}
             onClick={handleBookshelfClick}
-            className="hitbox-overlay z-20"
+            className="hitbox-overlay z-20 group flex items-center justify-center"
             style={{ left: "65.5%", top: "30.82%", width: "23.85%", height: "24.06%" }}
             title="Bookshelf"
           >
-            {showPing && (
-              <div className="relative flex h-10 w-10 items-center justify-center pointer-events-none animate-fade-in">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-60"></span>
-                <span className="relative inline-flex rounded-full h-5 w-5 bg-amber-500 border-2 border-black shadow-sm flex items-center justify-center text-[10px]">
-                  📖
-                </span>
-              </div>
-            )}
+            <div className="relative flex h-10 w-10 items-center justify-center pointer-events-none">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-40"></span>
+              <span className="relative inline-flex rounded-full h-10 w-10 bg-amber-500 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] flex items-center justify-center text-lg transition-transform group-hover:scale-110">
+                📖
+              </span>
+            </div>
           </motion.div>
 
           {/* Door/Closet Hitbox */}
@@ -429,10 +443,17 @@ export function HomeContent({
             onClick={() => {
               router.push("/backpack");
             }}
-            className="hitbox-overlay z-20"
+            className="hitbox-overlay z-20 group flex items-center justify-center"
             style={{ left: "91.8%", top: "41.77%", width: "8.2%", height: "38.81%" }}
             title="Closet"
-          />
+          >
+            <div className="relative flex h-10 w-10 items-center justify-center pointer-events-none">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-40"></span>
+              <span className="relative inline-flex rounded-full h-10 w-10 bg-rose-400 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] flex items-center justify-center text-lg transition-transform group-hover:scale-110">
+                🎒
+              </span>
+            </div>
+          </motion.div>
 
           {/* Cabbit Portrait Hitbox */}
           <motion.div
@@ -440,19 +461,33 @@ export function HomeContent({
             onClick={() => {
               router.push("/profile");
             }}
-            className="hitbox-overlay z-20"
+            className="hitbox-overlay z-20 group flex items-center justify-center"
             style={{ left: "77%", top: "28%", width: "7%", height: "10%" }}
             title="Cabbit Portrait"
-          />
+          >
+            <div className="relative flex h-10 w-10 items-center justify-center pointer-events-none">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-40"></span>
+              <span className="relative inline-flex rounded-full h-10 w-10 bg-sky-400 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] flex items-center justify-center text-lg transition-transform group-hover:scale-110">
+                🖼️
+              </span>
+            </div>
+          </motion.div>
 
           {/* Plant Hitbox */}
           <motion.div
             whileHover={{ scale: 1.02 }}
             onClick={handlePlantClick}
-            className="hitbox-overlay z-20"
+            className="hitbox-overlay z-20 group flex items-center justify-center"
             style={{ left: "0%", top: "78.21%", width: "18.99%", height: "21.79%" }}
             title="Water Plant"
-          />
+          >
+            <div className="relative flex h-10 w-10 items-center justify-center pointer-events-none">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-40"></span>
+              <span className="relative inline-flex rounded-full h-10 w-10 bg-emerald-400 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] flex items-center justify-center text-lg transition-transform group-hover:scale-110">
+                🪴
+              </span>
+            </div>
+          </motion.div>
 
           {/* Window Hitbox */}
           <motion.div
@@ -460,28 +495,49 @@ export function HomeContent({
             onClick={() => {
               router.push("/explore");
             }}
-            className="hitbox-overlay z-20"
+            className="hitbox-overlay z-20 group flex items-center justify-center"
             style={{ left: "35%", top: "5%", width: "30%", height: "25%" }}
             title="Explore"
-          />
+          >
+            <div className="relative flex h-10 w-10 items-center justify-center pointer-events-none">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-40"></span>
+              <span className="relative inline-flex rounded-full h-10 w-10 bg-violet-400 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] flex items-center justify-center text-lg transition-transform group-hover:scale-110">
+                🗺️
+              </span>
+            </div>
+          </motion.div>
 
           {/* Table & Mug Hitbox */}
           <motion.div
             whileHover={{ scale: 1.02 }}
             onClick={handleTableClick}
-            className="hitbox-overlay z-20"
+            className="hitbox-overlay z-20 group flex items-center justify-center"
             style={{ left: "25%", top: "65%", width: "20%", height: "25%" }}
             title="Drink Tea"
-          />
+          >
+            <div className="relative flex h-10 w-10 items-center justify-center pointer-events-none">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-40"></span>
+              <span className="relative inline-flex rounded-full h-10 w-10 bg-yellow-400 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] flex items-center justify-center text-lg transition-transform group-hover:scale-110">
+                ☕
+              </span>
+            </div>
+          </motion.div>
 
           {/* Food Bowl Hitbox */}
           <motion.div
             whileHover={{ scale: 1.02 }}
             onClick={handleBowlClick}
-            className="hitbox-overlay z-20"
+            className="hitbox-overlay z-20 group flex items-center justify-center"
             style={{ left: "81%", top: "53%", width: "8%", height: "10%" }}
             title="Feed Pip"
-          />
+          >
+            <div className="relative flex h-10 w-10 items-center justify-center pointer-events-none">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-40"></span>
+              <span className="relative inline-flex rounded-full h-10 w-10 bg-red-400 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] flex items-center justify-center text-lg transition-transform group-hover:scale-110">
+                🥣
+              </span>
+            </div>
+          </motion.div>
 
           {/* 3D ISOMETRIC PLAYGROUND CANVAS */}
           <div className="absolute inset-0 flex items-center justify-center isometric-stage z-10">
@@ -553,7 +609,7 @@ export function HomeContent({
                             {/* Padded, dynamic hitbox overlay covering the Cabbit in standing or sleeping modes */}
                             <div 
                               onClick={handleCabbitClick}
-                              className="hitbox-overlay absolute z-30 cursor-pointer"
+                              className="hitbox-overlay absolute z-30 cursor-pointer group flex items-center justify-center"
                               style={{
                                 width: companion.cabbitMood === "sleeping" ? "190px" : "150px",
                                 height: companion.cabbitMood === "sleeping" ? "130px" : "190px",
@@ -562,7 +618,14 @@ export function HomeContent({
                                 borderRadius: "32px",
                               }}
                               title={companion.name}
-                            />
+                            >
+                              <div className="relative flex h-10 w-10 items-center justify-center pointer-events-none">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-40"></span>
+                                <span className="relative inline-flex rounded-full h-10 w-10 bg-pink-400 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] flex items-center justify-center text-lg transition-transform group-hover:scale-110">
+                                  🐰
+                                </span>
+                              </div>
+                            </div>
                           </>
                         ) : (
                           <>
@@ -574,10 +637,16 @@ export function HomeContent({
                             />
                             <div 
                               onClick={handleCabbitClick}
-                              className="hitbox-overlay absolute inset-0 z-30 cursor-pointer"
+                              className="hitbox-overlay absolute inset-0 z-30 cursor-pointer group flex items-center justify-center"
                               style={{ borderRadius: "12px" }}
                               title={companion.name}
-                            />
+                            >
+                              <div className="relative flex h-6 w-6 items-center justify-center pointer-events-none">
+                                <span className="relative inline-flex rounded-full h-6 w-6 bg-pink-400 border border-black shadow-sm flex items-center justify-center text-xs transition-transform group-hover:scale-110">
+                                  🐰
+                                </span>
+                              </div>
+                            </div>
                           </>
                         )}
                       </motion.div>
