@@ -116,11 +116,6 @@ function ProfileContent() {
         transition={{ type: "spring", stiffness: 200, damping: 25 }}
         className="w-[420px] h-full flex items-center p-6 relative z-20"
       >
-        {/* Equipment Tab handle (decorative) */}
-        <div className="absolute -left-6 top-1/2 -translate-y-1/2 w-10 h-32 bg-[#4A6FA5] border-y-4 border-l-4 border-black rounded-l-2xl flex items-center justify-center shadow-[-4px_4px_0px_rgba(0,0,0,0.2)] z-30">
-          <span className="text-white font-black text-xs -rotate-90 tracking-widest whitespace-nowrap">EQUIPMENT</span>
-        </div>
-
         <div className="w-full h-[90%] chunky-panel bg-[#faedcd] flex flex-col relative z-40 p-5 space-y-4 shadow-[-8px_8px_0px_rgba(0,0,0,0.2)] overflow-hidden">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
