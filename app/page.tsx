@@ -70,7 +70,8 @@ function TypedSpeechBubble({ text, name, onClose }: TypedSpeechBubbleProps) {
     setTypedText("");
     const interval = setInterval(() => {
       if (idx < text.length) {
-        setTypedText((prev) => prev + text[idx]);
+        const nextChar = text[idx];
+        setTypedText((prev) => prev + nextChar);
         idx++;
       } else {
         clearInterval(interval);
