@@ -112,12 +112,6 @@ function ProfileContent() {
         className="w-[420px] h-full flex items-center p-6 relative z-20"
       >
         <div className="w-full h-[90%] chunky-panel bg-[#faedcd] flex flex-col relative z-40 p-5 space-y-4 shadow-[-8px_8px_0px_rgba(0,0,0,0.2)] overflow-hidden">
-          <div className="flex items-center justify-end">
-            <button className="w-8 h-8 bg-[#4A6FA5] text-white font-black rounded-full border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer">
-              X
-            </button>
-          </div>
-
           {/* Centered Bag Illustration */}
           <div className="flex-1 flex items-center justify-center overflow-hidden">
             <img 
