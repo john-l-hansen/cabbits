@@ -185,6 +185,95 @@ body {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
   transform: scale(1.02);
 }
+/* 
+  ======================================================
+  CLAYMORPHIC & SOFT UI ENGINE OVERRIDES (GLOBAL)
+  ======================================================
+*/
 
+/* 1. Global Borders - Soften color & thickness */
+[class*="border-black"],
+[class*="border-neutral-"],
+[class*="border-neutral-1000"] {
+  border-color: rgba(74, 46, 27, 0.12) !important;
+}
 
+/* Reduce harsh borders */
+[class*="border-4"] {
+  border-width: 2px !important;
+}
+[class*="border-2"] {
+  border-width: 1.5px !important;
+}
 
+/* 2. Global Shadows - Soften harsh offsets into clay depth */
+[class*="shadow-["] {
+  box-shadow: 0 10px 25px -4px rgba(74, 46, 27, 0.08), 
+              0 4px 12px -2px rgba(74, 46, 27, 0.04) !important;
+}
+
+/* 3. Global Curves - Round all container elements */
+[class*="rounded-xl"] {
+  border-radius: 20px !important;
+}
+[class*="rounded-2xl"] {
+  border-radius: 24px !important;
+}
+[class*="rounded-[2rem]"] {
+  border-radius: 32px !important;
+}
+[class*="rounded-[12px]"] {
+  border-radius: 20px !important;
+}
+[class*="rounded-none"] {
+  border-radius: 24px !important; /* Force soft corners on raw rectangles */
+}
+
+/* 4. Global Panels - Warm Backgrounds */
+.chunky-panel {
+  background-color: #f5f2eb !important; /* Authentic speech bubble cream */
+  border: 1.5px solid rgba(74, 46, 27, 0.12) !important;
+  box-shadow: 0 12px 28px rgba(74, 46, 27, 0.08), 
+              0 4px 12px rgba(74, 46, 27, 0.04) !important;
+  border-radius: 24px !important;
+}
+
+/* 5. Tactile Clay Buttons */
+.chunky-button {
+  background-color: #ffffff !important;
+  color: #4a2e1b !important;
+  border: 1.5px solid rgba(74, 46, 27, 0.15) !important;
+  box-shadow: 0 6px 14px rgba(74, 46, 27, 0.08) !important;
+  border-radius: 16px !important;
+  text-shadow: none !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Hover: expand slightly and soften shadow */
+.chunky-button:hover:not(:disabled) {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 20px rgba(74, 46, 27, 0.12) !important;
+}
+
+/* Active: press down gently */
+.chunky-button:active:not(:disabled) {
+  transform: translateY(2px) !important;
+  box-shadow: 0 2px 6px rgba(74, 46, 27, 0.06) !important;
+}
+
+/* Override individual file chunk-button offsets that might collide */
+[class*="active:translate-x-"],
+[class*="active:translate-y-"] {
+  transform: none !important; /* Handled by standard active transition */
+}
+
+/* Soften custom speech bubbles / dialogue containers */
+div[class*="bg-[#f7f3e6]"],
+div[class*="bg-[#fdfaf2]"],
+div[class*="bg-[#fefdf9]"] {
+  background-color: #f5f2eb !important; /* Unify bubble color */
+  border-radius: 24px !important;
+  border-color: rgba(74, 46, 27, 0.08) !important;
+  box-shadow: 0 12px 28px rgba(74, 46, 27, 0.08), 
+              0 4px 12px rgba(74, 46, 27, 0.04) !important;
+}
