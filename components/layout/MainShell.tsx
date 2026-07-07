@@ -259,7 +259,7 @@ export function MainShell({ children }: { children: React.ReactNode }) {
       <main className="h-screen w-screen px-6 py-8 flex items-center justify-center bg-[var(--neutral-50)]">
         <div className="animate-pulse flex flex-col items-center gap-4">
           <div className="text-4xl">🐰</div>
-          <p className="text-sm text-[var(--neutral-500)]">Loading interface...</p>
+          <p className="text-sm text-[var(--neutral-500)]">Loading...</p>
         </div>
       </main>
     );
