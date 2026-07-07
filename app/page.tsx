@@ -180,8 +180,8 @@ interface HomeContentProps {
   setBubbleText: (t: string) => void;
   isBubbleOpen: boolean;
   setIsBubbleOpen: (b: boolean) => void;
-  zoomTransition: boolean;
-  setZoomTransition: (z: boolean) => void;
+  zoomTarget: string | null;
+  setZoomTarget: (target: string | null) => void;
   pipTile: { x: number; y: number };
   setPipTile: (t: { x: number; y: number }) => void;
   isHopping: boolean;
@@ -191,6 +191,7 @@ interface HomeContentProps {
   handleBookshelfClick: () => void;
   handleCabbitClick: () => void;
   screenFlash: boolean;
+  setScreenFlash: (f: boolean) => void;
   showPing: boolean;
 }
 
@@ -199,8 +200,8 @@ export function HomeContent({
   setBubbleText,
   isBubbleOpen,
   setIsBubbleOpen,
-  zoomTransition,
-  setZoomTransition,
+  zoomTarget,
+  setZoomTarget,
   pipTile,
   setPipTile,
   isHopping,
@@ -210,6 +211,7 @@ export function HomeContent({
   handleBookshelfClick,
   handleCabbitClick,
   screenFlash,
+  setScreenFlash,
   showPing,
 }: HomeContentProps) {
   const { companion, isLoading, quests, memories, journalEntries, completedQuestIds, showLevelUpAlert, setShowLevelUpAlert } = useCompanion();
@@ -268,6 +270,7 @@ export function HomeContent({
 
   const handlePlantClick = () => {
     setIsBubbleOpen(true);
+    setZoomTarget("plant");
     if (companion && companion.cabbitMood === "sleeping") {
       setBubbleText("Zzz... Pip is sleeping peacefully and cannot water the plant right now.");
       return;
@@ -279,6 +282,7 @@ export function HomeContent({
 
   const handleTableClick = () => {
     setIsBubbleOpen(true);
+    setZoomTarget("tea");
     if (companion && companion.cabbitMood === "sleeping") {
       setBubbleText("Zzz... Pip is sleeping and shouldn't drink cocoa right now.");
       return;
@@ -344,8 +348,19 @@ export function HomeContent({
       {companion.cabbitMood === "sleeping" && <div className="absolute inset-0 bg-[#1A1E29]/30 pointer-events-none z-5" />}
 
       <div
-        className={`relative w-full h-full transition-all duration-700 overflow-hidden ${
-          zoomTransition ? "scale-120 -translate-x-[18%] translate-y-[10%]" : "scale-100"
+        className={`relative w-full h-full transition-all duration-[800ms] ease-out overflow-hidden ${
+          !zoomTarget ? "scale-100 translate-x-0 translate-y-0" :
+          zoomTarget === "bookshelf" ? "scale-120 -translate-x-[18%] translate-y-[10%]" :
+          zoomTarget === "closet" ? "scale-[1.3] -translate-x-[36%] translate-y-[4%]" :
+          zoomTarget === "profile" ? "scale-[1.3] -translate-x-[22%] translate-y-[18%]" :
+          zoomTarget === "explore" ? "scale-120 translate-x-[4%] translate-y-[26%]" :
+          zoomTarget === "plant" ? "scale-120 translate-x-[36%] -translate-y-[28%]" :
+          zoomTarget === "tea" ? "scale-120 translate-x-[20%] -translate-y-[14%]" :
+          zoomTarget === "bowl" ? "scale-[1.25] -translate-x-[28%] -translate-y-[16%]" :
+          zoomTarget === "cabbit" ? "scale-[1.2] translate-x-0 -translate-y-[8%]" :
+          zoomTarget === "bed" ? "scale-[1.25] translate-x-[22%] translate-y-[18%]" :
+          zoomTarget === "calendar" ? "scale-[1.3] -translate-x-[6%] translate-y-[15%]" :
+          "scale-100 translate-x-0 translate-y-0"
         }`}
       >
         <motion.div
@@ -361,7 +376,10 @@ export function HomeContent({
               <TypedSpeechBubble
                 text={bubbleText}
                 name={companion.name}
-                onClose={() => setIsBubbleOpen(false)}
+                onClose={() => {
+                  setIsBubbleOpen(false);
+                  setZoomTarget(null);
+                }}
               />
             )}
           </AnimatePresence>
@@ -384,10 +402,12 @@ export function HomeContent({
           <motion.div
             whileHover={{ scale: 1.02 }}
             onClick={() => {
+              setZoomTarget("bed");
               const cycle: ("sunny" | "rainy" | "snowy" | "night" | "foggy")[] = ["sunny", "rainy", "snowy", "night", "foggy"];
               const remaining = cycle.filter(w => w !== weather);
               const randomWeather = remaining[Math.floor(Math.random() * remaining.length)];
               if (setWeather) setWeather(randomWeather);
+              setTimeout(() => { setZoomTarget(null); }, 1500);
             }}
             className="hitbox-overlay z-20"
             style={{ left: "5.08%", top: "23.58%", width: "25.44%", height: "31.3%" }}
@@ -398,9 +418,11 @@ export function HomeContent({
           <motion.div
             whileHover={{ scale: 1.02 }}
             onClick={() => {
+              setZoomTarget("calendar");
               const cycle: ("sunny" | "rainy" | "snowy" | "night" | "foggy")[] = ["sunny", "rainy", "snowy", "night", "foggy"];
               const nextIdx = (cycle.indexOf(weather) + 1) % cycle.length;
               if (setWeather) setWeather(cycle[nextIdx]);
+              setTimeout(() => { setZoomTarget(null); }, 1500);
             }}
             className="hitbox-overlay z-20"
             style={{ left: "53.5%", top: "27.5%", width: "5.5%", height: "12.0%" }}
@@ -420,7 +442,13 @@ export function HomeContent({
           <motion.div
             whileHover={{ scale: 1.02 }}
             onClick={() => {
-              router.push("/backpack");
+              setZoomTarget("closet");
+              setTimeout(() => {
+                setScreenFlash(true);
+              }, 350);
+              setTimeout(() => {
+                router.push("/backpack");
+              }, 600);
             }}
             className="hitbox-overlay z-20"
             style={{ left: "91.8%", top: "41.77%", width: "8.2%", height: "38.81%" }}
@@ -431,7 +459,13 @@ export function HomeContent({
           <motion.div
             whileHover={{ scale: 1.02 }}
             onClick={() => {
-              router.push("/profile");
+              setZoomTarget("profile");
+              setTimeout(() => {
+                setScreenFlash(true);
+              }, 350);
+              setTimeout(() => {
+                router.push("/profile");
+              }, 600);
             }}
             className="hitbox-overlay z-20"
             style={{ left: "77%", top: "28%", width: "7%", height: "10%" }}
@@ -451,7 +485,13 @@ export function HomeContent({
           <motion.div
             whileHover={{ scale: 1.02 }}
             onClick={() => {
-              router.push("/explore");
+              setZoomTarget("explore");
+              setTimeout(() => {
+                setScreenFlash(true);
+              }, 350);
+              setTimeout(() => {
+                router.push("/explore");
+              }, 600);
             }}
             className="hitbox-overlay z-20"
             style={{ left: "35%", top: "5%", width: "30%", height: "25%" }}
@@ -743,7 +783,7 @@ export default function Home() {
   const [bubbleText, setBubbleText] = useState<string>("");
   const [isBubbleOpen, setIsBubbleOpen] = useState(false);
   const [showPing, setShowPing] = useState(false);
-  const [zoomTransition, setZoomTransition] = useState(false);
+  const [zoomTarget, setZoomTarget] = useState<string | null>(null);
   const [screenFlash, setScreenFlash] = useState(false);
   const [pipTile, setPipTile] = useState<{ x: number; y: number }>({ x: 2, y: 2 });
   const [isHopping, setIsHopping] = useState(false);
@@ -765,6 +805,7 @@ export default function Home() {
   const handleToggleSleep = async () => {
     setIsBubbleOpen(true);
     setIsHopping(true);
+    setZoomTarget("bed");
     
     // Hop target coordination
     const target = companion && companion.cabbitMood === "sleeping" ? { x: 2, y: 2 } : { x: 0, y: 0 };
@@ -784,6 +825,7 @@ export default function Home() {
 
   const handleBowlClick = async () => {
     setIsBubbleOpen(true);
+    setZoomTarget("bowl");
     if (companion && companion.cabbitMood === "sleeping") {
       setBubbleText("Shh, I'm sleeping right now!");
       return;
@@ -812,7 +854,7 @@ export default function Home() {
   };
 
   const handleBookshelfClick = () => {
-    setZoomTransition(true);
+    setZoomTarget("bookshelf");
     setBubbleText("Let's go look at the books!");
     setTimeout(() => {
       setScreenFlash(true);
@@ -824,6 +866,7 @@ export default function Home() {
 
   const handleCabbitClick = () => {
     setIsBubbleOpen(true);
+    setZoomTarget("cabbit");
     if (companion && companion.cabbitMood === "sleeping") {
       setBubbleText("Zzz... Pip is sleeping peacefully.");
       return;
@@ -861,8 +904,8 @@ export default function Home() {
       setBubbleText={setBubbleText} 
       isBubbleOpen={isBubbleOpen} 
       setIsBubbleOpen={setIsBubbleOpen} 
-      zoomTransition={zoomTransition} 
-      setZoomTransition={setZoomTransition} 
+      zoomTarget={zoomTarget} 
+      setZoomTarget={setZoomTarget} 
       pipTile={pipTile}
       setPipTile={setPipTile}
       isHopping={isHopping}
@@ -872,6 +915,7 @@ export default function Home() {
       handleBookshelfClick={handleBookshelfClick}
       handleCabbitClick={handleCabbitClick}
       screenFlash={screenFlash}
+      setScreenFlash={setScreenFlash}
       showPing={showPing}
     />
   );
