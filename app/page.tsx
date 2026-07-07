@@ -265,7 +265,6 @@ export function HomeContent({
 
   const handlePlantClick = () => {
     setIsBubbleOpen(true);
-    setZoomTarget("plant");
     if (companion && companion.cabbitMood === "sleeping") {
       setBubbleText("Zzz... Pip is sleeping peacefully and cannot water the plant right now.");
       return;
@@ -277,7 +276,6 @@ export function HomeContent({
 
   const handleTableClick = () => {
     setIsBubbleOpen(true);
-    setZoomTarget("tea");
     if (companion && companion.cabbitMood === "sleeping") {
       setBubbleText("Zzz... Pip is sleeping and shouldn't drink cocoa right now.");
       return;
@@ -397,12 +395,10 @@ export function HomeContent({
           <motion.div
             whileHover={{ scale: 1.02 }}
             onClick={() => {
-              setZoomTarget("bed");
               const cycle: ("sunny" | "rainy" | "snowy" | "night" | "foggy")[] = ["sunny", "rainy", "snowy", "night", "foggy"];
               const remaining = cycle.filter(w => w !== weather);
               const randomWeather = remaining[Math.floor(Math.random() * remaining.length)];
               if (setWeather) setWeather(randomWeather);
-              setTimeout(() => { setZoomTarget(null); }, 1500);
             }}
             className="hitbox-overlay z-20"
             style={{ left: "5.08%", top: "23.58%", width: "25.44%", height: "31.3%" }}
@@ -413,11 +409,9 @@ export function HomeContent({
           <motion.div
             whileHover={{ scale: 1.02 }}
             onClick={() => {
-              setZoomTarget("calendar");
               const cycle: ("sunny" | "rainy" | "snowy" | "night" | "foggy")[] = ["sunny", "rainy", "snowy", "night", "foggy"];
               const nextIdx = (cycle.indexOf(weather) + 1) % cycle.length;
               if (setWeather) setWeather(cycle[nextIdx]);
-              setTimeout(() => { setZoomTarget(null); }, 1500);
             }}
             className="hitbox-overlay z-20"
             style={{ left: "53.5%", top: "27.5%", width: "5.5%", height: "12.0%" }}
@@ -820,7 +814,6 @@ export default function Home() {
 
   const handleBowlClick = async () => {
     setIsBubbleOpen(true);
-    setZoomTarget("bowl");
     if (companion && companion.cabbitMood === "sleeping") {
       setBubbleText("Shh, I'm sleeping right now!");
       return;
@@ -860,18 +853,12 @@ export default function Home() {
   };
 
   const handleCabbitClick = () => {
-    if (zoomTarget === "cabbit") {
-      setIsBubbleOpen(false);
-      setZoomTarget(null);
-    } else {
-      setIsBubbleOpen(true);
-      setZoomTarget("cabbit");
-      if (companion && companion.cabbitMood === "sleeping") {
-        setBubbleText("Zzz... Pip is sleeping peacefully.");
-        return;
-      }
-      setBubbleText("Pip is happy to be here with you!");
+    setIsBubbleOpen(true);
+    if (companion && companion.cabbitMood === "sleeping") {
+      setBubbleText("Zzz... Pip is sleeping peacefully.");
+      return;
     }
+    setBubbleText("Pip is happy to be here with you!");
   };
 
   // Sync Pip tile with sleeping state on load/change
