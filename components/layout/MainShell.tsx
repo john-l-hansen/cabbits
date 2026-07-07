@@ -128,7 +128,7 @@ export function MainShell({ children }: { children: React.ReactNode }) {
   const [showSettings, setShowSettings] = useState(false);
   const [selectedLetter, setSelectedLetter] = useState<any>(null);
 
-  const [isMusicEnabled, setIsMusicEnabled] = useState(false);
+  const [isMusicEnabled, setIsMusicEnabled] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Initialize persistent HTML5 ambient audio player
@@ -380,10 +380,7 @@ export function MainShell({ children }: { children: React.ReactNode }) {
                       className="accent-[var(--neutral-1000)] cursor-pointer"
                     />
                   </label>
-                  <label className="flex items-center justify-between text-xs text-[var(--neutral-700)] cursor-pointer hover:bg-[var(--neutral-55)] p-1.5 rounded-md select-none">
-                    <span>Show Blueprint Grid</span>
-                    <input type="checkbox" defaultChecked className="accent-[var(--neutral-1000)] cursor-pointer" />
-                  </label>
+
 
                   <hr className="border-[var(--neutral-200)]" />
 
