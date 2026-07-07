@@ -133,8 +133,14 @@ function QuestContent() {
   const rewardItem = activeQuest.rewardItemId ? ITEMS[activeQuest.rewardItemId] : null;
 
   return (
-    <main className="min-h-screen bg-[var(--neutral-200)] px-6 py-8 flex justify-center items-center select-none font-sans">
-      <section className="mx-auto w-full max-w-md rounded-[2rem] border-4 border-black bg-[var(--neutral-0)] p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+    <main className="min-h-screen relative px-6 py-8 flex justify-center items-center select-none font-sans overflow-hidden bg-[#9ecae0]">
+      {/* Profile Background Image */}
+      <img 
+        src="/assets/profile-bg.png?v=1" 
+        alt="Profile Background" 
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
+      />
+      <section className="mx-auto w-full max-w-md rounded-[2rem] border-4 border-black bg-[var(--neutral-0)] p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative z-10">
         <div className="flex items-center justify-between">
           <Link href={exitUrl} className="text-xs font-black uppercase text-[var(--neutral-600)] hover:text-black transition-colors">
             ← Exit Map
@@ -146,9 +152,15 @@ function QuestContent() {
 
         {/* 1. Submitting Thinking Screen */}
         {isSubmitting ? (
-          <div className="my-12 flex flex-col items-center">
-            <CompanionOrb mood="new" curiosity={companion.curiosity} />
-            <div className="mt-8 w-full rounded-2xl bg-[var(--neutral-50)] p-5 text-left border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div className="my-12 flex flex-col items-center gap-6">
+            <div className="size-[100px] rounded-[999px] border-2 border-black bg-[#eae4d3] flex items-center justify-center overflow-hidden shrink-0 relative shadow-[4px_4px_0px_black] mx-auto animate-pulse">
+              <img 
+                src="/assets/cabbit-idle-01.png" 
+                alt={companion.name} 
+                className="w-full h-full object-contain scale-[1.95] origin-center" 
+              />
+            </div>
+            <div className="w-full rounded-2xl bg-[var(--neutral-50)] p-5 text-left border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center gap-2 mb-3">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--neutral-1000)] opacity-75"></span>
@@ -167,7 +179,13 @@ function QuestContent() {
           /* 2. Quest Completed Screen */
           <div className="mt-6 space-y-6 animate-fade-in text-left">
             <div className="flex justify-center">
-              <CompanionOrb mood="idle" curiosity={companion.curiosity} />
+              <div className="size-[100px] rounded-[999px] border-2 border-black bg-[#eae4d3] flex items-center justify-center overflow-hidden shrink-0 relative shadow-[4px_4px_0px_black]">
+                <img 
+                  src="/assets/cabbit-idle-01.png" 
+                  alt={companion.name} 
+                  className="w-full h-full object-contain scale-[1.95] origin-center" 
+                />
+              </div>
             </div>
 
             <div className="text-center">
@@ -252,7 +270,13 @@ function QuestContent() {
           /* 3. Quest Form Input Screen */
           <div className="mt-6 text-left">
             <div className="my-6 flex justify-center">
-              <CompanionOrb mood="quest" curiosity={companion.curiosity} />
+              <div className="size-[100px] rounded-[999px] border-2 border-black bg-[#eae4d3] flex items-center justify-center overflow-hidden shrink-0 relative shadow-[4px_4px_0px_black]">
+                <img 
+                  src="/assets/cabbit-idle-01.png" 
+                  alt={companion.name} 
+                  className="w-full h-full object-contain scale-[1.95] origin-center" 
+                />
+              </div>
             </div>
 
             <h1 className="text-2xl font-black uppercase leading-snug text-[var(--neutral-900)]">{activeQuest.title}</h1>
