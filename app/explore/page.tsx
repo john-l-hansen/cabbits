@@ -518,6 +518,11 @@ export default function ExplorePage() {
   const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
   const [activeQuestId, setActiveQuestId] = useState<string | null>(null);
 
+  // Broadcast active explore zone to MainShell audio system
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('zone-change', { detail: selectedLoc }));
+  }, [selectedLoc]);
+
   // Close location details with ESC instead of navigating away
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {

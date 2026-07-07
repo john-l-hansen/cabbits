@@ -147,13 +147,37 @@ export function MainShell({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const [activeZone, setActiveZone] = useState<string | null>(null);
+
+  // Listen to custom zone-change events broadcasted by Explore and Quest pages
+  useEffect(() => {
+    const handleZoneChange = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setActiveZone(detail);
+    };
+    window.addEventListener("zone-change", handleZoneChange);
+    return () => window.removeEventListener("zone-change", handleZoneChange);
+  }, []);
+
   // Update track selection depending on page location (reactivity)
   useEffect(() => {
     if (!audioRef.current) return;
     
-    let targetSrc = "/assets/K02-06.mp3"; // Cozy room theme
+    let targetSrc = "/assets/theme.mp3"; // Cozy room theme (default)
     if (pathname === "/explore" || pathname === "/quest") {
-      targetSrc = "/assets/ravenshadow-audio.mp3"; // Active exploration theme
+      if (activeZone === "meadow") {
+        targetSrc = "/assets/little-bridge.mp3";
+      } else if (activeZone === "forest") {
+        targetSrc = "/assets/oak-forest.mp3";
+      } else if (activeZone === "pond") {
+        targetSrc = "/assets/pond.mp3";
+      } else if (activeZone === "burrow") {
+        targetSrc = "/assets/burrow.mp3";
+      } else if (activeZone === "library") {
+        targetSrc = "/assets/secret-library.mp3";
+      } else {
+        targetSrc = "/assets/little-bridge.mp3"; // default explore map overview theme
+      }
     }
     
     const currentSrc = audioRef.current.src;
@@ -163,7 +187,7 @@ export function MainShell({ children }: { children: React.ReactNode }) {
         audioRef.current.play().catch(err => console.log("Autoplay blocked:", err));
       }
     }
-  }, [pathname, isMusicEnabled]);
+  }, [pathname, activeZone, isMusicEnabled]);
 
   // Handle manual playback toggle
   useEffect(() => {

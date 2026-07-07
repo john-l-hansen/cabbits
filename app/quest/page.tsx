@@ -29,6 +29,13 @@ function QuestContent() {
 
   const activeQuest = QUESTS[questId] || QUESTS.pond_lilies;
 
+  // Broadcast active quest zone to MainShell audio system
+  useEffect(() => {
+    if (activeQuest?.locationId) {
+      window.dispatchEvent(new CustomEvent('zone-change', { detail: activeQuest.locationId }));
+    }
+  }, [activeQuest?.locationId]);
+
   // Redirect to companion creation if none exists
   useEffect(() => {
     if (!isLoading && !companion) {
