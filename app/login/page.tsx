@@ -172,7 +172,7 @@ function parseKeepsake(input: string) {
 }
 
 export default function LoginPage() {
-  const { companion, createCompanion, isLoading } = useCompanion();
+  const { companion, createCompanion, resetCompanion, isLoading } = useCompanion();
   const router = useRouter();
 
   const [step, setStep] = useState<"splash" | "returning" | "signup" | "creation" | "keepsake-reveal" | "welcome">("splash");
@@ -233,16 +233,19 @@ export default function LoginPage() {
     setError("");
     localStorage.setItem("cabbits_user", JSON.stringify({ email: email.trim() }));
     
-    if (companion) {
-      setStep("welcome");
-    } else {
-      setStep("creation");
-    }
+    // Clear any previous companion details so the new user starts fresh with customization & naming
+    resetCompanion();
+    setName("");
+    setStep("creation");
   };
 
   const handleGoogleSignIn = () => {
     localStorage.setItem("cabbits_user", JSON.stringify({ email: "googleuser@gmail.com" }));
-    if (companion) {
+    if (step === "signup") {
+      resetCompanion();
+      setName("");
+      setStep("creation");
+    } else if (companion) {
       setStep("welcome");
     } else {
       setStep("creation");
