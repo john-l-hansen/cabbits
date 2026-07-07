@@ -173,7 +173,7 @@ function ProfileContent() {
               </div>
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-center p-4 space-y-4">
-                <div className="w-[180px] h-[180px] rounded-2xl border-4 border-black shadow-[4px_4px_0px_black] overflow-hidden bg-white">
+                <div className="w-[240px] h-[240px] rounded-2xl border-4 border-black shadow-[4px_4px_0px_black] overflow-hidden bg-white">
                   <img 
                     src="/assets/bag-coming-soon.png" 
                     alt="Equipment Coming Soon" 
